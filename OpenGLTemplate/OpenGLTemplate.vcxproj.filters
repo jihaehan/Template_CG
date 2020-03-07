@@ -180,5 +180,11 @@
     <None Include="resources\shaders\disintegrateShader.vert">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="resources\shaders\BlinnPhongShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\BlinnPhongShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
