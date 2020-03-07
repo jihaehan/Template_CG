@@ -204,7 +204,7 @@ void Game::Initialise()
 	// Load some meshes in OBJ/3ds format
 	m_pBarrelMesh->Load("resources\\models\\Barrel\\Barrel02.obj");  // Downloaded from http://www.psionicgames.com/?page_id=24 on 24 Jan 2013
 	m_pHorseMesh->Load("resources\\models\\Horse\\Horse2.obj");  // Downloaded from http://opengameart.org/content/horse-lowpoly on 24 Jan 2013
-	m_pHorseMesh->Load("resources\\models\\Tree\\tree_white.3ds");  // Downloaded from SketchUp Library on Nov 2019
+	m_pTreeMesh->Load("resources\\models\\Tree\\tree_white.3ds");  // Downloaded from SketchUp Library on Nov 2019
 	m_pPavilionMesh->Load("resources\\models\\Pavilion\\pavilion_textured.3ds");
 	m_pSaturnRingMesh->Load("resources\\models\\Saturn_Ring\\saturn_ring.3ds");
 	m_pCowMesh->Load("resources\\models\\Cow\\cow4.3ds");
@@ -313,8 +313,10 @@ void Game::Render()
 	modelViewMatrixStack.Pop();
 
 	// Render the horse 
+	glm::vec3 horsePosition = glm::vec3(0.0f, 0.0f, 0.0f); 
+	horsePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(horsePosition);
 	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
+		modelViewMatrixStack.Translate(horsePosition);
 		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 180.0f);
 		modelViewMatrixStack.Scale(2.5f);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
@@ -332,7 +334,7 @@ void Game::Render()
 	modelViewMatrixStack.Pop();
 	
 	// Render the tree 
-	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f); // moved it to a flatter part of the terrain
+	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f); 
 	treePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition);
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(treePosition);
