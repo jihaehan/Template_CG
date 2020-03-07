@@ -167,6 +167,8 @@
     <ClCompile Include="VertexBufferObjectIndexed.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\shaders\disintegrateShader.frag" />
+    <None Include="resources\shaders\disintegrateShader.vert" />
     <None Include="resources\shaders\mainShader.frag" />
     <None Include="resources\shaders\mainShader.vert" />
     <None Include="resources\shaders\sphereShader.frag" />
