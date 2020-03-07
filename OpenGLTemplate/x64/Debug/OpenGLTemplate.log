@@ -1,0 +1,14 @@
+﻿  CatmullRom.cpp
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\CatmullRom.cpp(194,53): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\CatmullRom.cpp(195,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\CatmullRom.cpp(302,30): warning C4018: '<': signed/unsigned mismatch
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\CatmullRom.cpp(349,62): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\CatmullRom.cpp(350,89): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\CatmullRom.cpp(350,89): warning C4267: 'argument': conversion from 'size_t' to 'GLint', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\CatmullRom.cpp(351,56): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+  Game.cpp
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(614,33): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(617,33): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(662,21): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
+  Generating Code...
+  OpenGLTemplate.vcxproj -> C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\x64\Debug\OpenGLTemplate.exe
