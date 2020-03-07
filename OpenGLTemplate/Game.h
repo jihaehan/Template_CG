@@ -18,6 +18,7 @@ class COpenAssetImportMesh;
 class CAudio;
 class CTetrahedron;
 class CUrchin;
+class CHeightMapTerrain;
 class CCatmullRom;
 
 class Game {
@@ -42,6 +43,7 @@ private:
 	CSphere *m_pSphere;
 	CTetrahedron* m_pTetrahedron;
 	CUrchin* m_pUrchin;
+	CHeightMapTerrain* m_pHeightmapTerrain;
 	CHighResolutionTimer *m_pHighResolutionTimer;
 	CAudio *m_pAudio;
 	CCatmullRom* m_pCatmullRom; 

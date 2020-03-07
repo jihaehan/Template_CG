@@ -36,6 +36,7 @@ Source code drawn from a number of sources and examples, including contributions
 #include "Shaders.h"
 #include "FreeTypeFont.h"
 #include "Sphere.h"
+#include "HeightMapTerrain.h"
 #include "MatrixStack.h"
 #include "OpenAssetImportMesh.h"
 #include "Audio.h"
@@ -58,6 +59,7 @@ Game::Game()
 	m_pSphere = NULL;
 	m_pTetrahedron = NULL;
 	m_pUrchin = NULL;
+	m_pHeightmapTerrain = NULL;
 	m_pHighResolutionTimer = NULL;
 	m_pAudio = NULL;
 	m_pCatmullRom = NULL;
@@ -83,12 +85,13 @@ Game::~Game()
 	delete m_pBarrelMesh;
 	delete m_pHorseMesh;
 	delete m_pTreeMesh;
-	delete 	m_pPavilionMesh;
+	delete m_pPavilionMesh;
 	delete m_pSaturnRingMesh;
 	delete m_pCowMesh;
 	delete m_pSphere;
 	delete m_pTetrahedron;
 	delete m_pUrchin;
+	delete m_pHeightmapTerrain;
 	delete m_pAudio;
 	delete m_pCatmullRom; 
 
@@ -124,6 +127,7 @@ void Game::Initialise()
 	m_pSphere = new CSphere;
 	m_pTetrahedron = new CTetrahedron;
 	m_pUrchin = new CUrchin;
+	m_pHeightmapTerrain = new CHeightMapTerrain;
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
 
@@ -215,11 +219,14 @@ void Game::Initialise()
 	// Create an urchin
 	m_pUrchin->Create("resources\\textures\\", "dirtpile01.jpg", 3);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
+		
+	// Create a heightmap terrain
+	m_pHeightmapTerrain->Create("resources\\textures\\terrainHeightMap200.bmp", "resources\\textures\\GrassBright.bmp", glm::vec3(0, 0, 0), 500.0f, 500.0f, 20.5f);
 
 	//============================ AUDIO ======================================//
 	// Initialise audio and play background music
 	m_pAudio->Initialise();
-	m_pAudio->LoadEventSound("resources\\Audio\\Boing.wav");					// Royalty free sound from freesound.org
+	m_pAudio->LoadEventSound("resources\\Audio\\Boing.wav");		// Royalty free sound from freesound.org
 	m_pAudio->LoadMusicStream("resources\\Audio\\DST-Garote.mp3");	// Royalty free music from http://www.nosoapradio.us/
 	m_pAudio->PlayMusicStream();
 
@@ -297,6 +304,14 @@ void Game::Render()
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
 
+	// Render the new terrain
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pHeightmapTerrain->Render();
+	modelViewMatrixStack.Pop();
+
 	// Render the horse 
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -317,8 +332,10 @@ void Game::Render()
 	modelViewMatrixStack.Pop();
 	
 	// Render the tree 
+	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f); // moved it to a flatter part of the terrain
+	treePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition);
 	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(50.0f, 0.0f, 0.0f));
+		modelViewMatrixStack.Translate(treePosition);
 		modelViewMatrixStack.Scale(5.0f);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
