@@ -230,15 +230,16 @@ void Game::Initialise()
 	glEnable(GL_CULL_FACE);
 		
 	// Create a heightmap terrain
-	m_pHeightmapTerrain->Create("resources\\textures\\terrainHeightMap200.bmp", "resources\\textures\\GrassBright.bmp", glm::vec3(0, 0, 0), 500.0f, 500.0f, 20.5f);
+	m_pHeightmapTerrain->Create("resources\\textures\\terrainHeightMap200.bmp", "resources\\textures\\vangogh_sower.png", glm::vec3(0, 0, 0), 100.0f, 200.0f, 10.5f);
 
 	//============================ AUDIO ======================================//
 	// Initialise audio and play background music
+	/*
 	m_pAudio->Initialise();
 	m_pAudio->LoadEventSound("resources\\Audio\\Boing.wav");		// Royalty free sound from freesound.org
 	m_pAudio->LoadMusicStream("resources\\Audio\\DST-Garote.mp3");	// Royalty free music from http://www.nosoapradio.us/
 	m_pAudio->PlayMusicStream();
-
+	*/
 	//============================ CATMULL ====================================//
 	m_pCatmullRom->CreateCentreline();
 	m_pCatmullRom->CreateOffsetCurves();
@@ -286,8 +287,8 @@ void Game::Render()
 	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f));		// Diffuse colour of light
 	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f));		// Specular colour of light
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(1.0f));	// Ambient material reflectance
-	pMainProgram->SetUniform("material1.Md", glm::vec3(0.0f));	// Diffuse material reflectance
-	pMainProgram->SetUniform("material1.Ms", glm::vec3(0.0f));	// Specular material reflectance
+	pMainProgram->SetUniform("material1.Md", glm::vec3(0.6f));	// Diffuse material reflectance
+	pMainProgram->SetUniform("material1.Ms", glm::vec3(3.0f));	// Specular material reflectance
 	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 		
 	// Render the skybox and terrain with full ambient reflectance 
@@ -301,26 +302,28 @@ void Game::Render()
 		m_pSkybox->Render(cubeMapTextureUnit);
 		pMainProgram->SetUniform("renderSkybox", false);
 	modelViewMatrixStack.Pop();
-
+	/*
 	// Render the planar terrain
 	modelViewMatrixStack.Push();
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		m_pPlanarTerrain->Render();
 	modelViewMatrixStack.Pop();
+	*/
+
+	// Render the heightmap terrain
+	modelViewMatrixStack.Push();
+	modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
+	modelViewMatrixStack.Scale(glm::vec3(4.f, 1.f, 4.f));
+	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	m_pHeightmapTerrain->Render();
+	modelViewMatrixStack.Pop();
 
 	// Turn on diffuse + specular materials
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f));	// Ambient material reflectance
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
-
-	// Render the new terrain
-	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pHeightmapTerrain->Render();
-	modelViewMatrixStack.Pop();
 
 	// Render the horse 
 	glm::vec3 horsePosition = glm::vec3(0.0f, 0.0f, 0.0f); 
@@ -507,7 +510,7 @@ void Game::Update()
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
 	m_pCamera->Update(m_dt);
 
-	m_pAudio->Update();
+	//m_pAudio->Update();
 
 	//Set Catmull Spline
 	glm::vec3 p, up, pNext; 
