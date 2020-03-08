@@ -149,6 +149,8 @@ void Game::Initialise()
 	sShaderFileNames.push_back("textShader.frag");
 	sShaderFileNames.push_back("sphereShader.vert");
 	sShaderFileNames.push_back("sphereShader.frag");
+	sShaderFileNames.push_back("BlinnPhongShader.vert");
+	sShaderFileNames.push_back("BlinnPhongShader.frag");
 
 	for (int i = 0; i < (int) sShaderFileNames.size(); i++) {
 		string sExt = sShaderFileNames[i].substr((int) sShaderFileNames[i].size()-4, 4);
@@ -165,12 +167,12 @@ void Game::Initialise()
 
 	//============================ SHADERS ======================================//
 	// Create the main shader program
-	CShaderProgram *pMainProgram = new CShaderProgram;
+	CShaderProgram *pMainProgram = new CShaderProgram;		
 	pMainProgram->CreateProgram();
 	pMainProgram->AddShaderToProgram(&shShaders[0]);
 	pMainProgram->AddShaderToProgram(&shShaders[1]);
 	pMainProgram->LinkProgram();
-	m_pShaderPrograms->push_back(pMainProgram);
+	m_pShaderPrograms->push_back(pMainProgram);				//m_pShaderPrograms[0]
 
 	// Create a shader program for fonts
 	CShaderProgram *pFontProgram = new CShaderProgram;
@@ -178,15 +180,22 @@ void Game::Initialise()
 	pFontProgram->AddShaderToProgram(&shShaders[2]);
 	pFontProgram->AddShaderToProgram(&shShaders[3]);
 	pFontProgram->LinkProgram();
-	m_pShaderPrograms->push_back(pFontProgram);
+	m_pShaderPrograms->push_back(pFontProgram);				//m_pShaderPrograms[1]
 
 	// Create the sphere shader program
-	CShaderProgram* pSphereProgram = new CShaderProgram;
+	CShaderProgram* pSphereProgram = new CShaderProgram;	
 	pSphereProgram->CreateProgram();
 	pSphereProgram->AddShaderToProgram(&shShaders[4]);
 	pSphereProgram->AddShaderToProgram(&shShaders[5]);
 	pSphereProgram->LinkProgram();
-	m_pShaderPrograms->push_back(pSphereProgram);
+	m_pShaderPrograms->push_back(pSphereProgram);			//m_pShaderPrograms[2]
+
+	CShaderProgram* pBlinnProgram = new CShaderProgram;
+	pBlinnProgram->CreateProgram();
+	pBlinnProgram->AddShaderToProgram(&shShaders[6]);
+	pBlinnProgram->AddShaderToProgram(&shShaders[7]);
+	pBlinnProgram->LinkProgram();
+	m_pShaderPrograms->push_back(pBlinnProgram);			//m_pShaderPrograms[3]
 
 	// You can follow this pattern to load additional shaders
 
@@ -270,7 +279,8 @@ void Game::Render()
 
 	
 	// Set light and materials in main shader program
-	glm::vec4 lightPosition1 = glm::vec4(-100, 100, -100, 1); // Position of light source *in world coordinates*
+	glm::vec4 lightPosition1(-100, 100, -100, 1); // Position of light source *in world coordinates*
+	glm::vec4 lightPosition2(50, 100, 50, 1); // Position of light source *in world coordinates*
 	pMainProgram->SetUniform("light1.position", viewMatrix*lightPosition1); // Position of light source *in eye coordinates*
 	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f));		// Ambient colour of light
 	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f));		// Diffuse colour of light
@@ -441,8 +451,44 @@ void Game::Render()
 		//pMainProgram->SetUniform("bUseTexture", false);
 		m_pSphere->Render();
 	} modelViewMatrixStack.Pop();
+	
+	//============================ Blinn Phong Shader =================================//
+	CShaderProgram* pBlinnProgram = (*m_pShaderPrograms)[3];
+	pBlinnProgram->UseProgram();
 
-		
+	// Set light and materials in sphere programme
+	pBlinnProgram->SetUniform("light1.position", viewMatrix* lightPosition1);
+	pBlinnProgram->SetUniform("light1.La", glm::vec3(1.0f, 0.0f, 1.0f));
+	pBlinnProgram->SetUniform("light1.Ld", glm::vec3(1.0f, 0.0f, 1.0f));
+	pBlinnProgram->SetUniform("light1.Ls", glm::vec3(1.0f, 0.0f, 1.0f));
+	pBlinnProgram->SetUniform("light1.direction", glm::normalize(viewNormalMatrix* glm::vec3(0, -1, 0)));
+	pBlinnProgram->SetUniform("light1.exponent", 20.0f);
+	pBlinnProgram->SetUniform("light1.cutoff", 30.0f);
+	pBlinnProgram->SetUniform("light2.position", viewMatrix* lightPosition2);
+	pBlinnProgram->SetUniform("light2.La", glm::vec3(1.0f, 1.0f, 0.0f));
+	pBlinnProgram->SetUniform("light2.Ld", glm::vec3(1.0f, 1.0f, 0.0f));
+	pBlinnProgram->SetUniform("light2.Ls", glm::vec3(1.0f, 1.0f, 0.0f));
+	pBlinnProgram->SetUniform("light2.direction", glm::normalize(viewNormalMatrix* glm::vec3(0, -1, 0)));
+	pBlinnProgram->SetUniform("light2.exponent", 20.0f);
+	pBlinnProgram->SetUniform("light2.cutoff", 30.0f);
+	pBlinnProgram->SetUniform("material1.shininess", 15.0f);
+	pBlinnProgram->SetUniform("material1.Ma", glm::vec3(0.0f, 0.0f, 0.2f));
+	pBlinnProgram->SetUniform("material1.Md", glm::vec3(0.0f, 0.0f, 1.0f));
+	pBlinnProgram->SetUniform("material1.Ms", glm::vec3(1.0f, 1.0f, 1.0f));
+
+	for (int z = -5; z <= 5; z++) {
+		for (int x = -5; x <= 5; x++) {
+			modelViewMatrixStack.Push();
+			modelViewMatrixStack.Translate(glm::vec3(x * 10, 5.0f, z * 10));
+			modelViewMatrixStack.Scale(5.0f);
+			pBlinnProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
+			pBlinnProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+			pBlinnProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+			m_pSphere->Render();
+			modelViewMatrixStack.Pop();
+		}
+	}
+
 	//============================ 2D SHADER ==========================================//
 	// Draw the 2D graphics after the 3D graphics
 	DisplayFrameRate();
