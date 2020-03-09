@@ -53,6 +53,7 @@ Game::Game()
 	m_pBarrelMesh = NULL;
 	m_pHorseMesh = NULL;
 	m_pTreeMesh = NULL;
+	m_pOakMesh = NULL;
 	m_pPavilionMesh = NULL;
 	m_pSaturnRingMesh = NULL;
 	m_pCowMesh = NULL;
@@ -85,6 +86,7 @@ Game::~Game()
 	delete m_pBarrelMesh;
 	delete m_pHorseMesh;
 	delete m_pTreeMesh;
+	delete m_pOakMesh;
 	delete m_pPavilionMesh;
 	delete m_pSaturnRingMesh;
 	delete m_pCowMesh;
@@ -121,6 +123,7 @@ void Game::Initialise()
 	m_pBarrelMesh = new COpenAssetImportMesh;
 	m_pHorseMesh = new COpenAssetImportMesh;
 	m_pTreeMesh = new COpenAssetImportMesh;
+	m_pOakMesh = new COpenAssetImportMesh;
 	m_pPavilionMesh = new COpenAssetImportMesh;
 	m_pSaturnRingMesh = new COpenAssetImportMesh;
 	m_pCowMesh = new COpenAssetImportMesh;
@@ -214,6 +217,7 @@ void Game::Initialise()
 	m_pBarrelMesh->Load("resources\\models\\Barrel\\Barrel02.obj");  // Downloaded from http://www.psionicgames.com/?page_id=24 on 24 Jan 2013
 	m_pHorseMesh->Load("resources\\models\\Horse\\Horse2.obj");  // Downloaded from http://opengameart.org/content/horse-lowpoly on 24 Jan 2013
 	m_pTreeMesh->Load("resources\\models\\Tree\\tree_white.3ds");  // Downloaded from SketchUp Library on Nov 2019
+	m_pOakMesh->Load("resources\\models\\Tree\\quercus_A_packed_v1.obj");  
 	m_pPavilionMesh->Load("resources\\models\\Pavilion\\pavilion_textured.3ds");
 	m_pSaturnRingMesh->Load("resources\\models\\Saturn_Ring\\saturn_ring.3ds");
 	m_pCowMesh->Load("resources\\models\\Cow\\cow4.3ds");
@@ -313,7 +317,7 @@ void Game::Render()
 
 	// Render the heightmap terrain
 	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
+	modelViewMatrixStack.Translate(glm::vec3(0.0f, -20.0f, 0.0f));
 	modelViewMatrixStack.Scale(glm::vec3(4.f, 1.f, 4.f));
 	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
@@ -356,6 +360,18 @@ void Game::Render()
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		m_pTreeMesh->Render();
 	modelViewMatrixStack.Pop();
+
+	glDisable(GL_CULL_FACE);
+	glm::vec3 oakPosition = glm::vec3(50.0f, -10.f, 0.0f);
+	oakPosition.y = m_pHeightmapTerrain->ReturnGroundHeight(oakPosition);
+	modelViewMatrixStack.Push();
+	modelViewMatrixStack.Translate(treePosition);
+	modelViewMatrixStack.Scale(6.f);
+	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	m_pOakMesh->Render();
+	modelViewMatrixStack.Pop();
+	glEnable(GL_CULL_FACE);
 
 	// Render the pavilion 
 	modelViewMatrixStack.Push();
@@ -482,7 +498,7 @@ void Game::Render()
 	for (int z = -5; z <= 5; z++) {
 		for (int x = -5; x <= 5; x++) {
 			modelViewMatrixStack.Push();
-			modelViewMatrixStack.Translate(glm::vec3(x * 10, 5.0f, z * 10));
+			modelViewMatrixStack.Translate(glm::vec3(x * 10, -20.0f, z * 10));
 			modelViewMatrixStack.Scale(5.0f);
 			pBlinnProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
 			pBlinnProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
@@ -499,7 +515,7 @@ void Game::Render()
 	//============================ SWAP BUFFERS	 ======================================//
 	// Swap buffers to show the rendered image
 	SwapBuffers(m_gameWindow.Hdc());		
-	pSphereProgram->SetUniform("levels", m_levels); //sphere shader currently not working
+	pSphereProgram->SetUniform("levels", m_levels); 
 
 
 }
@@ -508,27 +524,21 @@ void Game::Render()
 void Game::Update() 
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	m_pCamera->Update(m_dt);
+	//m_pCamera->Update(m_dt);
 
 	//m_pAudio->Update();
 
 	//Set Catmull Spline
-	glm::vec3 p, up, pNext; 
-	m_pCatmullRom->Sample(m_currentDistance, p, up);
-	m_pCatmullRom->Sample(m_currentDistance + 1.0f, pNext, up);
+	glm::vec3 p, up, pNext, pNextNext, upNext, upNextNext; 
+	m_pCatmullRom->Sample(m_currentDistance, p, up);						
+	m_pCatmullRom->Sample(m_currentDistance + 30.0f, pNext, upNext);				//calculates T
+	m_pCatmullRom->Sample(m_currentDistance + 50.0f, pNextNext, upNextNext);	//causes delay in camera rotation
 
 	//TNB
 	glm::vec3 T = glm::normalize(pNext - p);
-	//glm::vec3 N = glm::normalize(glm::cross(T, up));
-	//glm::vec3 B = glm::normalize(glm::cross(N, T)); 
-	glm::vec3 P = p + glm::vec3(0, 1.0f, 0);
-	//glm::vec3 upManual = glm::rotate(glm::vec3(0, 1, 0), m_cameraRotation, T);
-
-
-	//set camera view point to forward
-	glm::vec3 viewpt = p + 10.0f * T; 
-	//m_pCamera->Set(P, viewpt, up);
-	//m_pCamera->Set(P, viewpt, upManual);
+	glm::vec3 P = p + up*3.f;
+	glm::vec3 viewpt = P + 10.0f * T; 
+	m_pCamera->Set(P, viewpt, upNextNext);
 
 	m_t += (float)(0.01f * m_dt);
 	m_currentDistance += (float)(m_cameraSpeed * m_dt);

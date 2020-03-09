@@ -37,6 +37,7 @@ private:
 	COpenAssetImportMesh *m_pBarrelMesh;
 	COpenAssetImportMesh *m_pHorseMesh;
 	COpenAssetImportMesh* m_pTreeMesh;
+	COpenAssetImportMesh* m_pOakMesh; 
 	COpenAssetImportMesh* m_pPavilionMesh;
 	COpenAssetImportMesh* m_pSaturnRingMesh;
 	COpenAssetImportMesh* m_pCowMesh;
