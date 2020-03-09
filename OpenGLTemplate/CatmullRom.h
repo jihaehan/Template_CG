@@ -43,7 +43,7 @@ private:
 	GLuint m_vaoOffsetCurve;
 	GLuint m_vaoTrack;
 	const GLuint SAMPLING = 400;
-	const float PATHWIDTH = 10.0f; 
+	const float PATHWIDTH = 20.0f; 
 
 	vector<glm::vec3> m_controlPoints;		// Control points, which are interpolated to produce the centreline points
 	vector<glm::vec3> m_controlUpVectors;	// Control upvectors, which are interpolated to produce the centreline upvectors

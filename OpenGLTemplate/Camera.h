@@ -34,6 +34,9 @@ public:
 	// Advance the camera (move it forward or backward)
 	void Advance(double direction);
 
+	// Move Camera on Rail (restricted movement)
+	//void MoveRail(e)
+
 	// Update the camera
 	void Update(double dt);
 

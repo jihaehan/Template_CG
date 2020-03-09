@@ -20,6 +20,7 @@ class CTetrahedron;
 class CUrchin;
 class CHeightMapTerrain;
 class CCatmullRom;
+class CPlayer; 
 
 class Game {
 private:
@@ -41,6 +42,7 @@ private:
 	COpenAssetImportMesh* m_pPavilionMesh;
 	COpenAssetImportMesh* m_pSaturnRingMesh;
 	COpenAssetImportMesh* m_pCowMesh;
+	COpenAssetImportMesh* m_pBikeMesh; 
 	CSphere *m_pSphere;
 	CTetrahedron* m_pTetrahedron;
 	CUrchin* m_pUrchin;
@@ -48,6 +50,7 @@ private:
 	CHighResolutionTimer *m_pHighResolutionTimer;
 	CAudio *m_pAudio;
 	CCatmullRom* m_pCatmullRom; 
+	CPlayer* m_pPlayer; 
 
 	// Some other member variables
 	double m_dt;

@@ -41,6 +41,8 @@ Source code drawn from a number of sources and examples, including contributions
 #include "OpenAssetImportMesh.h"
 #include "Audio.h"
 #include "CatmullRom.h"
+#include "Player.h"
+#include "Plane.h"
 
 // Constructor
 Game::Game()
@@ -57,6 +59,7 @@ Game::Game()
 	m_pPavilionMesh = NULL;
 	m_pSaturnRingMesh = NULL;
 	m_pCowMesh = NULL;
+	m_pBikeMesh = NULL;
 	m_pSphere = NULL;
 	m_pTetrahedron = NULL;
 	m_pUrchin = NULL;
@@ -64,6 +67,7 @@ Game::Game()
 	m_pHighResolutionTimer = NULL;
 	m_pAudio = NULL;
 	m_pCatmullRom = NULL;
+	m_pPlayer = NULL; 
 
 	m_dt = 0.0;
 	m_t = 0.0;
@@ -90,12 +94,14 @@ Game::~Game()
 	delete m_pPavilionMesh;
 	delete m_pSaturnRingMesh;
 	delete m_pCowMesh;
+	delete m_pBikeMesh;
 	delete m_pSphere;
 	delete m_pTetrahedron;
 	delete m_pUrchin;
 	delete m_pHeightmapTerrain;
 	delete m_pAudio;
 	delete m_pCatmullRom; 
+	delete m_pPlayer; 
 
 	if (m_pShaderPrograms != NULL) {
 		for (unsigned int i = 0; i < m_pShaderPrograms->size(); i++)
@@ -127,12 +133,14 @@ void Game::Initialise()
 	m_pPavilionMesh = new COpenAssetImportMesh;
 	m_pSaturnRingMesh = new COpenAssetImportMesh;
 	m_pCowMesh = new COpenAssetImportMesh;
+	m_pBikeMesh = new COpenAssetImportMesh;
 	m_pSphere = new CSphere;
 	m_pTetrahedron = new CTetrahedron;
 	m_pUrchin = new CUrchin;
 	m_pHeightmapTerrain = new CHeightMapTerrain;
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
+	m_pPlayer = new CPlayer; 
 
 	RECT dimensions = m_gameWindow.GetDimensions();
 
@@ -221,6 +229,11 @@ void Game::Initialise()
 	m_pPavilionMesh->Load("resources\\models\\Pavilion\\pavilion_textured.3ds");
 	m_pSaturnRingMesh->Load("resources\\models\\Saturn_Ring\\saturn_ring.3ds");
 	m_pCowMesh->Load("resources\\models\\Cow\\cow4.3ds");
+	m_pBikeMesh->Load("resources\\models\\Warbike\\bike.obj");
+
+	// Initialise Player 
+	m_pPlayer->Initialise(m_pHorseMesh);
+
 	// Create a sphere
 	m_pSphere->Create("resources\\textures\\", "dirtpile01.jpg", 25, 25);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
@@ -328,7 +341,7 @@ void Game::Render()
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f));	// Ambient material reflectance
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
-
+	/*
 	// Render the horse 
 	glm::vec3 horsePosition = glm::vec3(0.0f, 0.0f, 0.0f); 
 	horsePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(horsePosition);
@@ -340,6 +353,8 @@ void Game::Render()
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		m_pHorseMesh->Render();
 	modelViewMatrixStack.Pop();
+	*/
+	m_pPlayer->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
 	
 	// Render the barrel 
 	modelViewMatrixStack.Push();
@@ -361,6 +376,7 @@ void Game::Render()
 		m_pTreeMesh->Render();
 	modelViewMatrixStack.Pop();
 
+	// Render the oak
 	glDisable(GL_CULL_FACE);
 	glm::vec3 oakPosition = glm::vec3(50.0f, -10.f, 0.0f);
 	oakPosition.y = m_pHeightmapTerrain->ReturnGroundHeight(oakPosition);
@@ -442,6 +458,19 @@ void Game::Render()
 			m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		m_pCatmullRom->RenderTrack();
 	} modelViewMatrixStack.Pop();
+
+	// Render the Player 
+	glm::vec3 playerPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+	playerPosition.y = m_pHeightmapTerrain->ReturnGroundHeight(playerPosition);
+		modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(playerPosition);
+		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 180.0f);
+		modelViewMatrixStack.Scale(2.5f);
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pBikeMesh->Render(); 
+	modelViewMatrixStack.Pop();
+
 
 	//============================ SPHERE SHADER ======================================//
 	// Switch to the sphere program
@@ -525,13 +554,14 @@ void Game::Update()
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
 	//m_pCamera->Update(m_dt);
+	//glm::vec3 origin(-200, 0, 0), topspot(-200, 400.f, 0), upVector(0, 0, -1); m_pCamera->Set(topspot, origin, upVector);
 
 	//m_pAudio->Update();
 
 	//Set Catmull Spline
 	glm::vec3 p, up, pNext, pNextNext, upNext, upNextNext; 
 	m_pCatmullRom->Sample(m_currentDistance, p, up);						
-	m_pCatmullRom->Sample(m_currentDistance + 30.0f, pNext, upNext);				//calculates T
+	m_pCatmullRom->Sample(m_currentDistance + 25.0f, pNext, upNext);			//calculates T
 	m_pCatmullRom->Sample(m_currentDistance + 50.0f, pNextNext, upNextNext);	//causes delay in camera rotation
 
 	//TNB
@@ -545,6 +575,8 @@ void Game::Update()
 
 	//Number of Laps
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 
+
+	//Player Character
 
 }
 
