@@ -1,7 +1,11 @@
 #include "Player.h"
 
-CPlayer::CPlayer() : m_player(NULL), m_speed(0.25)
+CPlayer::CPlayer() : m_player(NULL)
 {
+	m_position = glm::vec3(0.0f, 10.0f, 100.0f);
+	m_view = glm::vec3(0.0f, 0.0f, -1.0f);
+	m_upVector = glm::vec3(0.0f, 1.0f, 0.0f);
+	m_speed = 0.025f;
 }
 
 CPlayer::~CPlayer()
@@ -13,27 +17,30 @@ void CPlayer::Initialise(COpenAssetImportMesh* object) {
 }
 
 void CPlayer::Render(glutil::MatrixStack playerStack, CShaderProgram* shaderProgram, CCamera* camera) {
-	//m_stack = playerStack; 
-	//m_shader = shaderProgram; 
-	//m_camera = camera; 
+	
+	glm::mat4 m_playerMatrixStack = playerStack.Top(); 
+	m_playerMatrixStack = playerStack.Top();
+	m_playerMatrixStack = glm::translate(m_position);
+
 
 	playerStack.Push();
 	playerStack.Translate(m_position);
-	playerStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 180.0f);
-	playerStack.Scale(2.5f);
+	float angle =  atan2(m_view.x, m_view.z); //horse is looking at me
+	playerStack.Rotate(m_upVector, angle);
 	shaderProgram->SetUniform("matrices.modelViewMatrix", playerStack.Top());
 	shaderProgram->SetUniform("matrices.normalMatrix", camera->ComputeNormalMatrix(playerStack.Top()));
 	m_player->Render();
 	playerStack.Pop();
 }
 
+
 void CPlayer::Set(glm::vec3& position, glm::vec3& viewpoint, glm::vec3& upVector) {
-	m_position = position + glm::vec3(0.f, 0.f, 6.f);
-	m_view = viewpoint;
+	m_position = position + m_upVector*.5f + m_view*10.f;
 	m_upVector = upVector; 
+	m_view = viewpoint;
 }
 
-void CPlayer::Update(double dt)
+void CPlayer::Update(double dt, CCamera camera)
 {
 	TranslateByKeyboard(dt);
 	m_position.x = glm::clamp(m_position.x, -5.0f, 5.0f);
@@ -77,5 +84,4 @@ void CPlayer::Advance(double direction)
 	glm::vec3 view = glm::normalize(m_view - m_position);
 	m_position = m_position + view * speed;
 	m_view = m_view + view * speed;
-
 }

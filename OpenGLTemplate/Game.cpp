@@ -566,6 +566,7 @@ void Game::Update()
 
 	//TNB
 	glm::vec3 T = glm::normalize(pNext - p);
+	glm::vec3 UP = m_pCamera->GetUpVector();
 	glm::vec3 P = p + up*3.f;
 	glm::vec3 viewpt = P + 10.0f * T; 
 	m_pCamera->Set(P, viewpt, upNextNext);
@@ -577,6 +578,7 @@ void Game::Update()
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 
 
 	//Player Character
+	m_pPlayer->Set(pNext, T, up);
 
 }
 
