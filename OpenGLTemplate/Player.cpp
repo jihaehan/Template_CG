@@ -1,11 +1,12 @@
 #include "Player.h"
 
+
 CPlayer::CPlayer() : m_player(NULL)
 {
-	m_position = glm::vec3(0.0f, 10.0f, 100.0f);
+	m_speed = 0.025f;
+	m_position = glm::vec3(0.0f, 1.0f, 3.0f);
 	m_view = glm::vec3(0.0f, 0.0f, -1.0f);
 	m_upVector = glm::vec3(0.0f, 1.0f, 0.0f);
-	m_speed = 0.025f;
 }
 
 CPlayer::~CPlayer()
@@ -16,34 +17,81 @@ void CPlayer::Initialise(COpenAssetImportMesh* object) {
 	m_player = object; 
 }
 
+glm::quat CPlayer::RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
+{
+	m_start = glm::normalize(start);
+	m_dest = glm::normalize(dest);
+
+	cosTheta = dot(m_start, m_dest);
+
+	if (cosTheta < -1 + 0.001f) 
+	{
+		rotationAxis = glm::cross(glm::vec3(0.0f, 0.0f, 1.0f), m_start);
+		if (glm::length2(rotationAxis) < 0.01f)
+			rotationAxis = glm::cross(glm::vec3(1.0f, 0.0f, 0.0f), m_start);
+
+		rotationAxis = glm::normalize(rotationAxis);
+		return glm::angleAxis(glm::radians(180.f), rotationAxis);
+	}
+	rotationAxis = glm::cross(m_start, m_dest);
+	float s = sqrt((1 + cosTheta) * 2);
+	float invs = 1 / s;
+
+	return glm::quat(
+		s * 0.5f,
+		rotationAxis.x * invs,
+		rotationAxis.y * invs,
+		rotationAxis.z * invs
+	);
+}
+
 void CPlayer::Render(glutil::MatrixStack playerStack, CShaderProgram* shaderProgram, CCamera* camera) {
-	
-	glm::mat4 m_playerMatrixStack = playerStack.Top(); 
-	m_playerMatrixStack = playerStack.Top();
-	m_playerMatrixStack = glm::translate(m_position);
+	//rotation bw front of object and desired location
+	glm::quat R = RotationBetweenVectors(GetStart(), GetDest());
+	glm::vec3 rot = glm::normalize(glm::vec3(R.x, R.y, R.z));
+	float angle = acos(R.w);
 
+	//force vector upright
+	glm::vec3 right = glm::cross(GetDest(), m_upDesired);
+	m_upDesired = glm::cross(right, GetDest());
+	glm::vec3 newUp = rot * glm::vec3(m_upVector);
+	glm::quat U = RotationBetweenVectors(newUp, m_upDesired);
+	glm::vec3 rot2 = glm::normalize(glm::vec3(U.x, U.y, U.z));
+	float upangle = acos(U.w);
 
+	//combined quaternion
+	glm::quat target = U * R; // remember, in reverse order.
+	glm::vec3 targetRot = glm::normalize(glm::vec3(target.x, target.y, target.z));
+	float targetAngle = acos(target.w);
+
+	// kind of working
 	playerStack.Push();
-	playerStack.Translate(m_position);
-	float angle =  atan2(m_view.x, m_view.z); //horse is looking at me
-	playerStack.Rotate(m_upVector, angle);
+	playerStack.Translate(m_position + m_upVector + m_view*10.f);
+	playerStack.RotateRadians(targetRot, targetAngle);
+	playerStack.Scale(2.f);
 	shaderProgram->SetUniform("matrices.modelViewMatrix", playerStack.Top());
 	shaderProgram->SetUniform("matrices.normalMatrix", camera->ComputeNormalMatrix(playerStack.Top()));
 	m_player->Render();
 	playerStack.Pop();
+
 }
 
-
-void CPlayer::Set(glm::vec3& position, glm::vec3& viewpoint, glm::vec3& upVector) {
-	m_position = position + m_upVector*.5f + m_view*10.f;
+void CPlayer::Set(glm::vec3& position, glm::vec3& viewpoint, glm::vec3& upVector, glm::vec3& next, glm::vec3& upDesired) {
+	m_view = viewpoint; 
 	m_upVector = upVector; 
-	m_view = viewpoint;
+	m_position = position;
+	m_start = viewpoint; 
+	m_dest = next; 
+	m_upDesired = upDesired;
+
 }
 
-void CPlayer::Update(double dt, CCamera camera)
+void CPlayer::Update(double dt)
 {
-	TranslateByKeyboard(dt);
-	m_position.x = glm::clamp(m_position.x, -5.0f, 5.0f);
+	glm::vec3 vector = glm::cross(m_view - m_position, m_upVector);
+	m_strafeVector = glm::normalize(vector);
+	//TranslateByKeyboard(dt);
+	//m_position.x = glm::clamp(m_position.x, -5.0f, 5.0f);
 }
 
 // Update the camera to respond to key presses for translation

@@ -294,7 +294,6 @@ void Game::Render()
 	modelViewMatrixStack.LookAt(m_pCamera->GetPosition(), m_pCamera->GetView(), m_pCamera->GetUpVector());
 	glm::mat4 viewMatrix = modelViewMatrixStack.Top();
 	glm::mat3 viewNormalMatrix = m_pCamera->ComputeNormalMatrix(viewMatrix);
-
 	
 	// Set light and materials in main shader program
 	glm::vec4 lightPosition1(-100, 100, -100, 1); // Position of light source *in world coordinates*
@@ -341,20 +340,6 @@ void Game::Render()
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f));	// Ambient material reflectance
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
-	/*
-	// Render the horse 
-	glm::vec3 horsePosition = glm::vec3(0.0f, 0.0f, 0.0f); 
-	horsePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(horsePosition);
-	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(horsePosition);
-		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 180.0f);
-		modelViewMatrixStack.Scale(2.5f);
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pHorseMesh->Render();
-	modelViewMatrixStack.Pop();
-	*/
-	m_pPlayer->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
 	
 	// Render the barrel 
 	modelViewMatrixStack.Push();
@@ -471,6 +456,19 @@ void Game::Render()
 		m_pBikeMesh->Render(); 
 	modelViewMatrixStack.Pop();
 
+	
+	// Render the horse
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(0,5,0));
+		modelViewMatrixStack.RotateRadians(glm::vec3(0.0f, 1.0f, 0.0f), (float)M_PI*1.5);
+		modelViewMatrixStack.Scale(2.5f);
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pHorseMesh->Render();
+	modelViewMatrixStack.Pop();
+	
+	m_pPlayer->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
+
 
 	//============================ SPHERE SHADER ======================================//
 	// Switch to the sphere program
@@ -553,20 +551,29 @@ void Game::Render()
 void Game::Update() 
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	//m_pCamera->Update(m_dt);
-	//glm::vec3 origin(-200, 0, 0), topspot(-200, 400.f, 0), upVector(0, 0, -1); m_pCamera->Set(topspot, origin, upVector);
+	//m_pCamera->Update(m_dt); 
+	//glm::vec3 origin(0.315280616, -0.0721079335, -0.946255028), topspot(0, 5.f, 0), upVector(0, 0, -1); m_pCamera->Set(topspot, origin, upVector);
 
 	//m_pAudio->Update();
 
 	//Set Catmull Spline
-	glm::vec3 p, up, pNext, pNextNext, upNext, upNextNext; 
-	m_pCatmullRom->Sample(m_currentDistance, p, up);						
+	glm::vec3 p, up, pNext, pNextNext, upNext, upNextNext, playerUp, playerNext, playerNextNext, playerUpUp;
+	m_pCatmullRom->Sample(m_currentDistance, p, up);	
+	m_pCatmullRom->Sample(m_currentDistance + 1.0f, playerNext, playerUp);
+	m_pCatmullRom->Sample(m_currentDistance + 2.0f, playerNextNext, playerUpUp);
 	m_pCatmullRom->Sample(m_currentDistance + 25.0f, pNext, upNext);			//calculates T
 	m_pCatmullRom->Sample(m_currentDistance + 50.0f, pNextNext, upNextNext);	//causes delay in camera rotation
 
 	//TNB
+	glm::vec3 playerT = glm::normalize(playerNext - p); 
+	glm::vec3 playerTT = glm::normalize(playerNextNext - playerNext);
+	glm::vec3 playerN = glm::cross(playerT, playerUp);
+	glm::vec3 playerB = glm::normalize(glm::cross(playerN, playerT)); 
+
 	glm::vec3 T = glm::normalize(pNext - p);
-	glm::vec3 UP = m_pCamera->GetUpVector();
+	glm::vec3 N = glm::normalize(glm::cross(T, up));
+	glm::vec3 B = glm::normalize(glm::cross(N, T));
+
 	glm::vec3 P = p + up*3.f;
 	glm::vec3 viewpt = P + 10.0f * T; 
 	m_pCamera->Set(P, viewpt, upNextNext);
@@ -578,7 +585,8 @@ void Game::Update()
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 
 
 	//Player Character
-	m_pPlayer->Set(pNext, T, up);
+	m_pPlayer->Set(playerNext, playerT, B, playerTT, playerB);
+	//m_pPlayer->Update(m_dt); 
 
 }
 
