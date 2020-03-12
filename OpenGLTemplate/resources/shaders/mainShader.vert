@@ -6,6 +6,7 @@ uniform struct Matrices
 	mat4 projMatrix;
 	mat4 modelViewMatrix; 
 	mat3 normalMatrix;
+
 } matrices;
 
 // Structure holding light information:  its position as well as ambient, diffuse, and specular colours

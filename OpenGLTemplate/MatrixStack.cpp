@@ -37,6 +37,12 @@ namespace glutil
 		m_currMatrix *= theMat;
 	}
 
+	void MatrixStack::RotateQuat(const glm::mat4 rotationQuat)
+	{
+		glm::mat4 theMat = rotationQuat;
+		m_currMatrix *= theMat;
+	}
+
 	void MatrixStack::RotateX( float angDegCCW )
 	{
 		Rotate(glm::vec3(1.0f, 0.0f, 0.0f), angDegCCW);

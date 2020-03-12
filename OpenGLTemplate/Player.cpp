@@ -1,12 +1,12 @@
 #include "Player.h"
 
-
-CPlayer::CPlayer() : m_player(NULL)
+CPlayer::CPlayer()
+	:m_player(NULL),
+	m_position(0.0f, 5.0f, 0.0f),
+	m_rotationAxis(0.0f, 0.1f, 0.f),
+	m_rotationAmount(1.0f),
+	m_scale(1.0f)
 {
-	m_speed = 0.025f;
-	m_position = glm::vec3(0.0f, 1.0f, 3.0f);
-	m_view = glm::vec3(0.0f, 0.0f, -1.0f);
-	m_upVector = glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
 CPlayer::~CPlayer()
@@ -15,6 +15,14 @@ CPlayer::~CPlayer()
 
 void CPlayer::Initialise(COpenAssetImportMesh* object) {
 	m_player = object; 
+	
+}
+
+const void CPlayer::Transform(glm::mat4& player_transform)
+{
+	player_transform = glm::translate(player_transform, GetPosition() - GetOffset() * GetScale());
+	player_transform = glm::rotate(player_transform, GetRotationAmount(), GetRotationAxis());
+	player_transform = glm::scale(player_transform, GetScale());
 }
 
 glm::quat CPlayer::RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
@@ -22,67 +30,70 @@ glm::quat CPlayer::RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
 	m_start = glm::normalize(start);
 	m_dest = glm::normalize(dest);
 
-	cosTheta = dot(m_start, m_dest);
+	cosTheta = glm::dot(m_start, m_dest);
 
-	if (cosTheta < -1 + 0.001f) 
+	if (cosTheta < -1 + 0.001f) //special case when vectors are in opposite directions
 	{
-		rotationAxis = glm::cross(glm::vec3(0.0f, 0.0f, 1.0f), m_start);
-		if (glm::length2(rotationAxis) < 0.01f)
-			rotationAxis = glm::cross(glm::vec3(1.0f, 0.0f, 0.0f), m_start);
+		m_rotationAxis = glm::cross(m_upVector, m_start);		//guess one perpendicular vector
+		if (glm::length2(m_rotationAxis) < 0.01f)				//if it doesn't work
+			m_rotationAxis = glm::cross(m_strafeVector, m_start);	//guess the other direction
 
-		rotationAxis = glm::normalize(rotationAxis);
-		return glm::angleAxis(glm::radians(180.f), rotationAxis);
+		m_rotationAxis = glm::normalize(m_rotationAxis);
+		return glm::angleAxis(glm::radians(180.f), m_rotationAxis);
 	}
-	rotationAxis = glm::cross(m_start, m_dest);
-	float s = sqrt((1 + cosTheta) * 2);
-	float invs = 1 / s;
+	m_rotationAxis = glm::cross(m_start, m_dest);
+
+	float mag = sqrt((1 + cosTheta) * 2);
+	float invs = 1 / mag;
 
 	return glm::quat(
-		s * 0.5f,
-		rotationAxis.x * invs,
-		rotationAxis.y * invs,
-		rotationAxis.z * invs
+		mag * 0.5f,
+		m_rotationAxis.x * invs,
+		m_rotationAxis.y * invs,
+		m_rotationAxis.z * invs
 	);
 }
 
-void CPlayer::Render(glutil::MatrixStack playerStack, CShaderProgram* shaderProgram, CCamera* camera) {
-	//rotation bw front of object and desired location
+glm::quat CPlayer::ForceVectorUpright()
+{
 	glm::quat R = RotationBetweenVectors(GetStart(), GetDest());
-	glm::vec3 rot = glm::normalize(glm::vec3(R.x, R.y, R.z));
-	float angle = acos(R.w);
-
-	//force vector upright
 	glm::vec3 right = glm::cross(GetDest(), m_upDesired);
 	m_upDesired = glm::cross(right, GetDest());
-	glm::vec3 newUp = rot * glm::vec3(m_upVector);
+	glm::vec3 newUp = R * glm::vec3(m_upVector);
 	glm::quat U = RotationBetweenVectors(newUp, m_upDesired);
-	glm::vec3 rot2 = glm::normalize(glm::vec3(U.x, U.y, U.z));
-	float upangle = acos(U.w);
 
 	//combined quaternion
-	glm::quat target = U * R; // remember, in reverse order.
-	glm::vec3 targetRot = glm::normalize(glm::vec3(target.x, target.y, target.z));
-	float targetAngle = acos(target.w);
+	glm::quat target = U * R;
+	//glm::vec3 targetRot = glm::normalize(glm::vec3(target.x, target.y, target.z));
+	//float targetAngle = 2 * acos(target.w);
+	
+	return target; 
+}
+void CPlayer::Render(glutil::MatrixStack playerStack, CShaderProgram* shaderProgram, CCamera* camera) 
+{
+	glm::quat R = RotationBetweenVectors(GetStart(), GetDest());
 
-	// kind of working
 	playerStack.Push();
-	playerStack.Translate(m_position + m_upVector + m_view*10.f);
-	playerStack.RotateRadians(targetRot, targetAngle);
-	playerStack.Scale(2.f);
+	playerStack.Translate(m_position + m_upVector + m_view * 10.f);
+	playerStack.RotateQuat(glm::toMat4(R));
+	playerStack.Scale(.01f);
 	shaderProgram->SetUniform("matrices.modelViewMatrix", playerStack.Top());
 	shaderProgram->SetUniform("matrices.normalMatrix", camera->ComputeNormalMatrix(playerStack.Top()));
 	m_player->Render();
 	playerStack.Pop();
-
+	
 }
 
-void CPlayer::Set(glm::vec3& position, glm::vec3& viewpoint, glm::vec3& upVector, glm::vec3& next, glm::vec3& upDesired) {
+
+void CPlayer::Set(glm::vec3& position, glm::vec3& nextPosition,  glm::vec3& viewpoint, glm::vec3& upVector, glm::vec3& next, glm::vec3& upDesired) {
+	
 	m_view = viewpoint; 
 	m_upVector = upVector; 
 	m_position = position;
 	m_start = viewpoint; 
 	m_dest = next; 
 	m_upDesired = upDesired;
+	m_positionNext = nextPosition;
 
 }
 
@@ -133,3 +144,4 @@ void CPlayer::Advance(double direction)
 	m_position = m_position + view * speed;
 	m_view = m_view + view * speed;
 }
+

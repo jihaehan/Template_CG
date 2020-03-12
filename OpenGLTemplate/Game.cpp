@@ -60,6 +60,7 @@ Game::Game()
 	m_pSaturnRingMesh = NULL;
 	m_pCowMesh = NULL;
 	m_pBikeMesh = NULL;
+	m_pBirdMesh = NULL; 
 	m_pSphere = NULL;
 	m_pTetrahedron = NULL;
 	m_pUrchin = NULL;
@@ -95,6 +96,7 @@ Game::~Game()
 	delete m_pSaturnRingMesh;
 	delete m_pCowMesh;
 	delete m_pBikeMesh;
+	delete m_pBirdMesh; 
 	delete m_pSphere;
 	delete m_pTetrahedron;
 	delete m_pUrchin;
@@ -134,6 +136,7 @@ void Game::Initialise()
 	m_pSaturnRingMesh = new COpenAssetImportMesh;
 	m_pCowMesh = new COpenAssetImportMesh;
 	m_pBikeMesh = new COpenAssetImportMesh;
+	m_pBirdMesh = new COpenAssetImportMesh; 
 	m_pSphere = new CSphere;
 	m_pTetrahedron = new CTetrahedron;
 	m_pUrchin = new CUrchin;
@@ -230,9 +233,10 @@ void Game::Initialise()
 	m_pSaturnRingMesh->Load("resources\\models\\Saturn_Ring\\saturn_ring.3ds");
 	m_pCowMesh->Load("resources\\models\\Cow\\cow4.3ds");
 	m_pBikeMesh->Load("resources\\models\\Warbike\\bike.obj");
+	m_pBirdMesh->Load("resources\\models\\Bird\\wings.obj");
 
 	// Initialise Player 
-	m_pPlayer->Initialise(m_pHorseMesh);
+	m_pPlayer->Initialise(m_pBirdMesh);
 
 	// Create a sphere
 	m_pSphere->Create("resources\\textures\\", "dirtpile01.jpg", 25, 25);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
@@ -449,11 +453,11 @@ void Game::Render()
 	playerPosition.y = m_pHeightmapTerrain->ReturnGroundHeight(playerPosition);
 		modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(playerPosition);
-		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 180.0f);
-		modelViewMatrixStack.Scale(2.5f);
+		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 0.f);
+		modelViewMatrixStack.Scale(.01f);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pBikeMesh->Render(); 
+		m_pBirdMesh->Render(); 
 	modelViewMatrixStack.Pop();
 
 	
@@ -497,6 +501,7 @@ void Game::Render()
 		//pMainProgram->SetUniform("bUseTexture", false);
 		m_pSphere->Render();
 	} modelViewMatrixStack.Pop();
+
 	
 	//============================ Blinn Phong Shader =================================//
 	CShaderProgram* pBlinnProgram = (*m_pShaderPrograms)[3];
@@ -522,6 +527,7 @@ void Game::Render()
 	pBlinnProgram->SetUniform("material1.Md", glm::vec3(0.0f, 0.0f, 1.0f));
 	pBlinnProgram->SetUniform("material1.Ms", glm::vec3(1.0f, 1.0f, 1.0f));
 
+	
 	for (int z = -5; z <= 5; z++) {
 		for (int x = -5; x <= 5; x++) {
 			modelViewMatrixStack.Push();
@@ -552,7 +558,6 @@ void Game::Update()
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
 	//m_pCamera->Update(m_dt); 
-	//glm::vec3 origin(0.315280616, -0.0721079335, -0.946255028), topspot(0, 5.f, 0), upVector(0, 0, -1); m_pCamera->Set(topspot, origin, upVector);
 
 	//m_pAudio->Update();
 
@@ -585,8 +590,8 @@ void Game::Update()
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 
 
 	//Player Character
-	m_pPlayer->Set(playerNext, playerT, B, playerTT, playerB);
-	//m_pPlayer->Update(m_dt); 
+	m_pPlayer->Set(playerNext, playerNextNext, playerT, B, playerTT, playerB);
+	m_pPlayer->Update(m_dt); 
 
 }
 

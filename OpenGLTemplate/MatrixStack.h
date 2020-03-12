@@ -106,6 +106,9 @@ namespace glutil
 		///Applies a rotation matrix about the given axis, with the given angle in radians.
 		void RotateRadians(const glm::vec3 axis, float angRadCCW);
 
+		//Applies a rotation matrix using a quaternion
+		void RotateQuat(const glm::mat4 rotationQuat);
+
 		///Applies a rotation matrix about the +X axis, with the given angle in degrees.
 		void RotateX(float angDegCCW);
 		///Applies a rotation matrix about the +Y axis, with the given angle in degrees.

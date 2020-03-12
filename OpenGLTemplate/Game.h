@@ -43,6 +43,7 @@ private:
 	COpenAssetImportMesh* m_pSaturnRingMesh;
 	COpenAssetImportMesh* m_pCowMesh;
 	COpenAssetImportMesh* m_pBikeMesh; 
+	COpenAssetImportMesh* m_pBirdMesh; 
 	CSphere *m_pSphere;
 	CTetrahedron* m_pTetrahedron;
 	CUrchin* m_pUrchin;
