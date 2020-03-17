@@ -235,9 +235,6 @@ void Game::Initialise()
 	m_pBikeMesh->Load("resources\\models\\Warbike\\bike.obj");
 	m_pBirdMesh->Load("resources\\models\\Bird\\wings.obj");
 
-	// Initialise Player 
-	m_pPlayer->Initialise(m_pBirdMesh);
-
 	// Create a sphere
 	m_pSphere->Create("resources\\textures\\", "dirtpile01.jpg", 25, 25);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
@@ -253,14 +250,19 @@ void Game::Initialise()
 	// Create a heightmap terrain
 	m_pHeightmapTerrain->Create("resources\\textures\\terrainHeightMap200.bmp", "resources\\textures\\vangogh_sower.png", glm::vec3(0, 0, 0), 100.0f, 200.0f, 10.5f);
 
+
+	// Initialise Player 
+	m_pPlayer->Initialise(m_pBikeMesh);
+
+
 	//============================ AUDIO ======================================//
 	// Initialise audio and play background music
-	/*
+	
 	m_pAudio->Initialise();
 	m_pAudio->LoadEventSound("resources\\Audio\\Boing.wav");		// Royalty free sound from freesound.org
-	m_pAudio->LoadMusicStream("resources\\Audio\\DST-Garote.mp3");	// Royalty free music from http://www.nosoapradio.us/
+	m_pAudio->LoadMusicStream("resources\\Audio\\DST-Canopy.mp3");	// Royalty free music from http://www.nosoapradio.us/
 	m_pAudio->PlayMusicStream();
-	*/
+	
 	//============================ CATMULL ====================================//
 	m_pCatmullRom->CreateCentreline();
 	m_pCatmullRom->CreateOffsetCurves();
@@ -559,39 +561,33 @@ void Game::Update()
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
 	//m_pCamera->Update(m_dt); 
 
-	//m_pAudio->Update();
+	m_pAudio->Update();
 
 	//Set Catmull Spline
-	glm::vec3 p, up, pNext, pNextNext, upNext, upNextNext, playerUp, playerNext, playerNextNext, playerUpUp;
+	glm::vec3 p, up, pNext, pNextNext, upNext, upNextNext, playerUp, playerP;
 	m_pCatmullRom->Sample(m_currentDistance, p, up);	
-	m_pCatmullRom->Sample(m_currentDistance + 1.0f, playerNext, playerUp);
-	m_pCatmullRom->Sample(m_currentDistance + 2.0f, playerNextNext, playerUpUp);
 	m_pCatmullRom->Sample(m_currentDistance + 25.0f, pNext, upNext);			//calculates T
+	m_pCatmullRom->Sample(m_currentDistance + 26.0f, playerP, playerUp);		//calculates player position
 	m_pCatmullRom->Sample(m_currentDistance + 50.0f, pNextNext, upNextNext);	//causes delay in camera rotation
 
-	//TNB
-	glm::vec3 playerT = glm::normalize(playerNext - p); 
-	glm::vec3 playerTT = glm::normalize(playerNextNext - playerNext);
-	glm::vec3 playerN = glm::cross(playerT, playerUp);
-	glm::vec3 playerB = glm::normalize(glm::cross(playerN, playerT)); 
-
+	//Set Camera
 	glm::vec3 T = glm::normalize(pNext - p);
-	glm::vec3 N = glm::normalize(glm::cross(T, up));
-	glm::vec3 B = glm::normalize(glm::cross(N, T));
-
-	glm::vec3 P = p + up*3.f;
+	glm::vec3 P = p + up*10.f;
 	glm::vec3 viewpt = P + 10.0f * T; 
 	m_pCamera->Set(P, viewpt, upNextNext);
+
+	//Set Player
+	glm::vec3 PlayerT = glm::normalize(playerP - pNext);
+	glm::vec3 PlayerR = glm::normalize(glm::cross(PlayerT, playerUp));
+	glm::vec3 PlayerL = glm::normalize(glm::cross(playerUp, PlayerT));
+	m_pPlayer->Set(pNext, PlayerT, playerUp, PlayerR, PlayerL);
+	m_pPlayer->Update(m_dt);
 
 	m_t += (float)(0.01f * m_dt);
 	m_currentDistance += (float)(m_cameraSpeed * m_dt);
 
 	//Number of Laps
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 
-
-	//Player Character
-	m_pPlayer->Set(playerNext, playerNextNext, playerT, B, playerTT, playerB);
-	m_pPlayer->Update(m_dt); 
 
 }
 
@@ -788,3 +784,5 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE, PSTR, int)
 
 	return game.Execute();
 }
+
+

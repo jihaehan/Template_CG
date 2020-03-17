@@ -25,7 +25,7 @@ newmtl framepaint
 	Kd 0.5 0.2 0.2
 	Ks 0.24 0.0 0.0
 	Ka 0.1 0.05 0.05
-	map_Kd chrome.png
+	map_Kd framepaint.png
 
 newmtl guts
 	Ns 0

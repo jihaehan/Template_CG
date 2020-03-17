@@ -63,7 +63,6 @@ private:
 	float m_cameraSpeed; 
 	float m_cameraRotation; 
 
-
 public:
 	Game();
 	~Game();

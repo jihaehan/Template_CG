@@ -10,6 +10,8 @@
 #include "./include/glm/gtx/rotate_vector.hpp"
 #include "./include/glm/gtc/quaternion.hpp"
 #include "./include/glm/gtx/quaternion.hpp"
+#include "./include/glm/gtx/norm.hpp"
+
 
 #include "include/gl/glew.h"
 #include <gl/gl.h>
