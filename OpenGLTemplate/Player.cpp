@@ -33,11 +33,11 @@ void CPlayer::Render(glutil::MatrixStack playerStack, CShaderProgram* shaderProg
 	
 }
 
-void CPlayer::Set(glm::vec3& position,  glm::vec3& viewpoint, glm::vec3& upVector, glm::vec3& RVector, glm::vec3& LVector) {
+void CPlayer::Set(glm::vec3& position,  glm::vec3& viewpoint, glm::vec3& upVector) {
 	
 	m_view = viewpoint; 
 	m_upVector = upVector; 
-	m_position = position + m_speedr * glm::vec3(RVector.x, 0, RVector.y) + m_speedl * glm::vec3(LVector.x, 0, LVector.y) ;
+	m_position = position + m_speed *glm::normalize( m_strafeVector);
 }	
 
 void CPlayer::Update(double dt)
@@ -50,11 +50,11 @@ void CPlayer::Update(double dt)
 void CPlayer::TranslateByKeyboard(double dt)
 {
 	if (GetKeyState(VK_LEFT) & 0x80 || GetKeyState('A') & 0x80) {
-		m_speedl += 0.01f * dt;
+		m_speed -= 0.01f * dt;
 	}
 
 	if (GetKeyState(VK_RIGHT) & 0x80 || GetKeyState('D') & 0x80) {
-		m_speedr += 0.01f * dt;
+		m_speed += 0.01f * dt;
 	}
 }
 

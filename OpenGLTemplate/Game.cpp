@@ -578,9 +578,7 @@ void Game::Update()
 
 	//Set Player
 	glm::vec3 PlayerT = glm::normalize(playerP - pNext);
-	glm::vec3 PlayerR = glm::normalize(glm::cross(PlayerT, playerUp));
-	glm::vec3 PlayerL = glm::normalize(glm::cross(playerUp, PlayerT));
-	m_pPlayer->Set(pNext, PlayerT, playerUp, PlayerR, PlayerL);
+	m_pPlayer->Set(pNext, PlayerT, upNext);
 	m_pPlayer->Update(m_dt);
 
 	m_t += (float)(0.01f * m_dt);

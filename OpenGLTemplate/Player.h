@@ -19,7 +19,7 @@ public:
 	float GetRotationAmount() const { return m_rotationAmount; }
 
 	void Initialise(COpenAssetImportMesh* object);
-	void Set(glm::vec3& position, glm::vec3& viewpoint, glm::vec3& upVector, glm::vec3& BVector, glm::vec3& LVector);
+	void Set(glm::vec3& position, glm::vec3& viewpoint, glm::vec3& upVector);
 	void Render(glutil::MatrixStack playerStack, CShaderProgram* shaderProgram, CCamera* camera);
 	void Update(double dt);
 	void TranslateByKeyboard(double dt);
@@ -41,7 +41,7 @@ private:
 	glm::vec3 m_view{0.f, 0.f, -1.f};
 	glm::vec3 m_upVector{ 0.f, 1.f, 0.f };
 	glm::vec3 m_strafeVector{0.f, 0.f, -1.f};
-	float m_speedr{0.f};
-	float m_speedl{0.f};
+	float m_speed{0.f};
 
+	glm::quat RotationQuat{};
 };
