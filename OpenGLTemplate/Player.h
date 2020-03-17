@@ -42,6 +42,8 @@ private:
 	glm::vec3 m_upVector{ 0.f, 1.f, 0.f };
 	glm::vec3 m_strafeVector{0.f, 0.f, -1.f};
 	float m_speed{0.f};
+	float m_fspeed{ 0.f };
+	float m_clamp{ 9.f };
 
 	glm::quat RotationQuat{};
 };

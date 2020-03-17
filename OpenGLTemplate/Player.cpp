@@ -35,25 +35,36 @@ void CPlayer::Render(glutil::MatrixStack playerStack, CShaderProgram* shaderProg
 
 void CPlayer::Set(glm::vec3& position,  glm::vec3& viewpoint, glm::vec3& upVector) {
 	
-	m_view = viewpoint; 
+	m_view = viewpoint;
 	m_upVector = upVector; 
-	m_position = position + m_speed *glm::normalize( m_strafeVector);
+	m_position = position + m_speed *glm::normalize(m_strafeVector) + m_fspeed * glm::normalize(viewpoint);
 }	
 
 void CPlayer::Update(double dt)
 {
 	TranslateByKeyboard(dt);
-	//m_position.x = glm::clamp(m_position.x, -5.0f, 5.0f);
 }
+
 
 // Update the camera to respond to key presses for translation
 void CPlayer::TranslateByKeyboard(double dt)
 {
+	if (GetKeyState(VK_UP) & 0x80 || GetKeyState('W') & 0x80) {		
+		if (m_fspeed < m_clamp)
+			m_fspeed += 0.01f * dt;
+	}
+
+	if (GetKeyState(VK_DOWN) & 0x80 || GetKeyState('S') & 0x80) {
+		if (m_fspeed > -m_clamp)
+			m_fspeed -= 0.01f * dt;
+	}
 	if (GetKeyState(VK_LEFT) & 0x80 || GetKeyState('A') & 0x80) {
-		m_speed -= 0.01f * dt;
+		if (m_speed > -m_clamp) 
+			m_speed -= 0.01f * dt;
 	}
 
 	if (GetKeyState(VK_RIGHT) & 0x80 || GetKeyState('D') & 0x80) {
+		if (m_speed < m_clamp)
 		m_speed += 0.01f * dt;
 	}
 }
