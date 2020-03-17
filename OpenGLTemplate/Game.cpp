@@ -248,7 +248,7 @@ void Game::Initialise()
 	glEnable(GL_CULL_FACE);
 		
 	// Create a heightmap terrain
-	m_pHeightmapTerrain->Create("resources\\textures\\terrainHeightMap200.bmp", "resources\\textures\\vangogh_sower.png", glm::vec3(0, 0, 0), 100.0f, 200.0f, 10.5f);
+	m_pHeightmapTerrain->Create("resources\\textures\\heightmap_s.png", "resources\\textures\\vangogh_sower.png", glm::vec3(0, 0, 0), 900.0f, 900.0f, 150.f);
 
 
 	// Initialise Player 
@@ -324,19 +324,12 @@ void Game::Render()
 		m_pSkybox->Render(cubeMapTextureUnit);
 		pMainProgram->SetUniform("renderSkybox", false);
 	modelViewMatrixStack.Pop();
-	/*
-	// Render the planar terrain
-	modelViewMatrixStack.Push();
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pPlanarTerrain->Render();
-	modelViewMatrixStack.Pop();
-	*/
 
 	// Render the heightmap terrain
 	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(0.0f, -20.0f, 0.0f));
-	modelViewMatrixStack.Scale(glm::vec3(4.f, 1.f, 4.f));
+	modelViewMatrixStack.Translate(glm::vec3(-140.f, 40.f, 0.f));
+	modelViewMatrixStack.RotateRadians({ 0.f, 1.f, 0.f }, (float)M_PI);
+	modelViewMatrixStack.Scale({ 1.f });
 	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 	m_pHeightmapTerrain->Render();
@@ -449,19 +442,6 @@ void Game::Render()
 			m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		m_pCatmullRom->RenderTrack();
 	} modelViewMatrixStack.Pop();
-
-	// Render the Player 
-	glm::vec3 playerPosition = glm::vec3(0.0f, 0.0f, 0.0f);
-	playerPosition.y = m_pHeightmapTerrain->ReturnGroundHeight(playerPosition);
-		modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(playerPosition);
-		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 0.f);
-		modelViewMatrixStack.Scale(.01f);
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pBirdMesh->Render(); 
-	modelViewMatrixStack.Pop();
-
 	
 	// Render the horse
 	modelViewMatrixStack.Push();
@@ -473,6 +453,7 @@ void Game::Render()
 		m_pHorseMesh->Render();
 	modelViewMatrixStack.Pop();
 	
+	// Render the player
 	m_pPlayer->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
 
 
@@ -593,8 +574,6 @@ void Game::Update()
 
 void Game::DisplayFrameRate()
 {
-
-
 	CShaderProgram *fontProgram = (*m_pShaderPrograms)[1];
 
 	RECT dimensions = m_gameWindow.GetDimensions();

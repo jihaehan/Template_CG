@@ -1,10 +1,6 @@
 #include "Player.h"
 
 CPlayer::CPlayer()
-	:m_player(NULL),
-	m_position(0.0f, 5.0f, 0.0f),
-	m_rotationAxis(0.0f, 0.1f, 0.f),
-	m_rotationAmount(1.0f)
 {
 }
 
@@ -67,16 +63,6 @@ void CPlayer::TranslateByKeyboard(double dt)
 		if (m_speed < m_clamp)
 		m_speed += 0.01f * dt;
 	}
-}
-
-void CPlayer::Advance(double direction)
-{ /*
-	float speed = (float)(m_speed * direction);
-
-	glm::vec3 view = glm::normalize(m_view - m_position);
-	m_position = m_position + view * speed;
-	m_view = m_view + view * speed;
-	*/
 }
 
 // Returns a quaternion such that q*start = dest
