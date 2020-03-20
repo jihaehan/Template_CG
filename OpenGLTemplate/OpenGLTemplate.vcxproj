@@ -171,8 +171,6 @@
     <ClCompile Include="VertexBufferObjectIndexed.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="resources\shaders\BlinnPhongShader.frag" />
-    <None Include="resources\shaders\BlinnPhongShader.vert" />
     <None Include="resources\shaders\disintegrateShader.frag" />
     <None Include="resources\shaders\disintegrateShader.vert" />
     <None Include="resources\shaders\mainShader.frag" />

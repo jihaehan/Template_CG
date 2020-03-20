@@ -34,7 +34,6 @@ private:
 	CSkybox *m_pSkybox;
 	CCamera *m_pCamera;
 	vector <CShaderProgram *> *m_pShaderPrograms;
-	CPlane *m_pPlanarTerrain;
 	CFreeTypeFont *m_pFtFont;
 	COpenAssetImportMesh *m_pBarrelMesh;
 	COpenAssetImportMesh *m_pHorseMesh;
@@ -64,6 +63,7 @@ private:
 	float m_currentDistance; 
 	float m_cameraSpeed; 
 	float m_score;
+	bool m_lightswitch;
 
 public:
 	Game();

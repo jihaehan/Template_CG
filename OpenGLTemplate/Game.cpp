@@ -51,7 +51,6 @@ Game::Game()
 	m_pSkybox = NULL;
 	m_pCamera = NULL;
 	m_pShaderPrograms = NULL;
-	m_pPlanarTerrain = NULL;
 	m_pFtFont = NULL;
 	m_pBarrelMesh = NULL;
 	m_pHorseMesh = NULL;
@@ -80,6 +79,7 @@ Game::Game()
 	m_currentDistance = 0.f;
 	m_cameraSpeed = 0.05f;
 	m_score = 0; 
+	m_lightswitch = true;
 }
 
 // Destructor
@@ -88,7 +88,6 @@ Game::~Game()
 	//game objects
 	delete m_pCamera;
 	delete m_pSkybox;
-	delete m_pPlanarTerrain;
 	delete m_pFtFont;
 	delete m_pBarrelMesh;
 	delete m_pHorseMesh;
@@ -129,7 +128,6 @@ void Game::Initialise()
 	m_pCamera = new CCamera;
 	m_pSkybox = new CSkybox;
 	m_pShaderPrograms = new vector <CShaderProgram *>;
-	m_pPlanarTerrain = new CPlane;
 	m_pFtFont = new CFreeTypeFont;
 	m_pBarrelMesh = new COpenAssetImportMesh;
 	m_pHorseMesh = new COpenAssetImportMesh;
@@ -165,10 +163,8 @@ void Game::Initialise()
 	sShaderFileNames.push_back("mainShader.frag");
 	sShaderFileNames.push_back("textShader.vert");
 	sShaderFileNames.push_back("textShader.frag");
-	sShaderFileNames.push_back("sphereShader.vert");
-	sShaderFileNames.push_back("sphereShader.frag");
-	sShaderFileNames.push_back("BlinnPhongShader.vert");
-	sShaderFileNames.push_back("BlinnPhongShader.frag");
+	sShaderFileNames.push_back("sphereShaderEd.vert");
+	sShaderFileNames.push_back("sphereShaderEd.frag");
 
 	for (int i = 0; i < (int) sShaderFileNames.size(); i++) {
 		string sExt = sShaderFileNames[i].substr((int) sShaderFileNames[i].size()-4, 4);
@@ -208,13 +204,6 @@ void Game::Initialise()
 	pSphereProgram->LinkProgram();
 	m_pShaderPrograms->push_back(pSphereProgram);			//m_pShaderPrograms[2]
 
-	CShaderProgram* pBlinnProgram = new CShaderProgram;
-	pBlinnProgram->CreateProgram();
-	pBlinnProgram->AddShaderToProgram(&shShaders[6]);
-	pBlinnProgram->AddShaderToProgram(&shShaders[7]);
-	pBlinnProgram->LinkProgram();
-	m_pShaderPrograms->push_back(pBlinnProgram);			//m_pShaderPrograms[3]
-
 	// You can follow this pattern to load additional shaders
 
 	//============================ OBJECTS, CREATE ======================================//
@@ -222,9 +211,6 @@ void Game::Initialise()
 	// Skybox downloaded from http://www.akimbo.in/forum/viewtopic.php?f=10&t=9
 	m_pSkybox->Create(2500.0f);
 	
-	// Create the planar terrain
-	m_pPlanarTerrain->Create("resources\\textures\\", "grassfloor01.jpg", 2000.0f, 2000.0f, 50.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
-
 	m_pFtFont->LoadSystemFont("arial.ttf", 32);
 	m_pFtFont->SetShaderProgram(pFontProgram);
 
@@ -263,12 +249,12 @@ void Game::Initialise()
 
 	//============================ AUDIO ======================================//
 	// Initialise audio and play background music
-	
+	/*
 	m_pAudio->Initialise();
 	m_pAudio->LoadEventSound("resources\\Audio\\Boing.wav");		// Royalty free sound from freesound.org
 	m_pAudio->LoadMusicStream("resources\\Audio\\DST-Canopy.mp3");	// Royalty free music from http://www.nosoapradio.us/
 	m_pAudio->PlayMusicStream();
-	
+	*/
 	//============================ CATMULL ====================================//
 	m_pCatmullRom->CreateCentreline();
 	m_pCatmullRom->CreateOffsetCurves();
@@ -308,20 +294,19 @@ void Game::Render()
 	glm::mat3 viewNormalMatrix = m_pCamera->ComputeNormalMatrix(viewMatrix);
 	
 	// Set light and materials in main shader program
-	glm::vec4 lightPosition1(-100, 100, -100, 1); // Position of light source *in world coordinates*
-	glm::vec4 lightPosition2(50, 100, 50, 1); // Position of light source *in world coordinates*
+	glm::vec4 lightPosition1(-100, 100, -100, 1); // Position of light source *in world coordinates* 
 	pMainProgram->SetUniform("light1.position", viewMatrix*lightPosition1); // Position of light source *in eye coordinates*
 	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f));		// Ambient colour of light
 	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f));		// Diffuse colour of light
 	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f));		// Specular colour of light
-	pMainProgram->SetUniform("material1.Ma", glm::vec3(1.0f));	// Ambient material reflectance
-	pMainProgram->SetUniform("material1.Md", glm::vec3(0.6f));	// Diffuse material reflectance
+	pMainProgram->SetUniform("material1.Ma", glm::vec3(m_lightswitch));	// Ambient material reflectance
+	pMainProgram->SetUniform("material1.Md", glm::vec3(0.6f * m_lightswitch));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(3.0f));	// Specular material reflectance
 	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 		
 	// Render the skybox and terrain with full ambient reflectance 
 	modelViewMatrixStack.Push();
-		pMainProgram->SetUniform("renderSkybox", true);
+		pMainProgram->SetUniform("renderSkybox", m_lightswitch);
 		// Translate the modelview matrix to the camera eye point so skybox stays centred around camera
 		glm::vec3 vEye = m_pCamera->GetPosition();
 		modelViewMatrixStack.Translate(vEye);
@@ -330,7 +315,7 @@ void Game::Render()
 		m_pSkybox->Render(cubeMapTextureUnit);
 		pMainProgram->SetUniform("renderSkybox", false);
 	modelViewMatrixStack.Pop();
-
+	
 	// Render the heightmap terrain
 	modelViewMatrixStack.Push();
 	modelViewMatrixStack.Translate(glm::vec3(-140.f, 40.f, 0.f));
@@ -342,8 +327,8 @@ void Game::Render()
 	modelViewMatrixStack.Pop();
 
 	// Turn on diffuse + specular materials
-	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f));	// Ambient material reflectance
-	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
+	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f * m_lightswitch));	// Ambient material reflectance
+	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f * m_lightswitch));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
 	
 	// Render the barrel 
@@ -494,44 +479,6 @@ void Game::Render()
 	// Render the Pickup
 	m_pPickup->Render(modelViewMatrixStack, pSphereProgram, m_pCamera);
 
-	//============================ Blinn Phong Shader =================================//
-	CShaderProgram* pBlinnProgram = (*m_pShaderPrograms)[3];
-	pBlinnProgram->UseProgram();
-
-	// Set light and materials in sphere programme
-	pBlinnProgram->SetUniform("light1.position", viewMatrix* lightPosition1);
-	pBlinnProgram->SetUniform("light1.La", glm::vec3(1.0f, 0.0f, 1.0f));
-	pBlinnProgram->SetUniform("light1.Ld", glm::vec3(1.0f, 0.0f, 1.0f));
-	pBlinnProgram->SetUniform("light1.Ls", glm::vec3(1.0f, 0.0f, 1.0f));
-	pBlinnProgram->SetUniform("light1.direction", glm::normalize(viewNormalMatrix* glm::vec3(0, -1, 0)));
-	pBlinnProgram->SetUniform("light1.exponent", 20.0f);
-	pBlinnProgram->SetUniform("light1.cutoff", 30.0f);
-	pBlinnProgram->SetUniform("light2.position", viewMatrix* lightPosition2);
-	pBlinnProgram->SetUniform("light2.La", glm::vec3(1.0f, 1.0f, 0.0f));
-	pBlinnProgram->SetUniform("light2.Ld", glm::vec3(1.0f, 1.0f, 0.0f));
-	pBlinnProgram->SetUniform("light2.Ls", glm::vec3(1.0f, 1.0f, 0.0f));
-	pBlinnProgram->SetUniform("light2.direction", glm::normalize(viewNormalMatrix* glm::vec3(0, -1, 0)));
-	pBlinnProgram->SetUniform("light2.exponent", 20.0f);
-	pBlinnProgram->SetUniform("light2.cutoff", 30.0f);
-	pBlinnProgram->SetUniform("material1.shininess", 15.0f);
-	pBlinnProgram->SetUniform("material1.Ma", glm::vec3(0.0f, 0.0f, 0.2f));
-	pBlinnProgram->SetUniform("material1.Md", glm::vec3(0.0f, 0.0f, 1.0f));
-	pBlinnProgram->SetUniform("material1.Ms", glm::vec3(1.0f, 1.0f, 1.0f));
-
-	
-	for (int z = -5; z <= 5; z++) {
-		for (int x = -5; x <= 5; x++) {
-			modelViewMatrixStack.Push();
-			modelViewMatrixStack.Translate(glm::vec3(x * 10, -20.0f, z * 10));
-			modelViewMatrixStack.Scale(5.0f);
-			pBlinnProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
-			pBlinnProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-			pBlinnProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-			m_pSphere->Render();
-			modelViewMatrixStack.Pop();
-		}
-	}
-
 	//============================ 2D SHADER ==========================================//
 	// Draw the 2D graphics after the 3D graphics
 	DisplayFrameRate();
@@ -550,7 +497,7 @@ void Game::Update()
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
 	//m_pCamera->Update(m_dt); 
 
-	m_pAudio->Update();
+	//m_pAudio->Update();
 
 	//Set Catmull Spline
 	glm::vec3 p, up, pNext, pNextNext, upNext, upNextNext, playerUp, playerP;
@@ -721,6 +668,10 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 		case VK_F1:
 			m_pAudio->PlayEventSound();
 			break;
+		case VK_TAB:
+			if (m_lightswitch == true)
+				m_lightswitch = 0;
+			else m_lightswitch = true;
 		case 189:
 			if (m_levels > 1) m_levels = m_levels - 1;
 			break;
