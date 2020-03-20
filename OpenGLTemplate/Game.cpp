@@ -43,6 +43,7 @@ Source code drawn from a number of sources and examples, including contributions
 #include "CatmullRom.h"
 #include "Player.h"
 #include "Plane.h"
+#include "Pickup.h"
 
 // Constructor
 Game::Game()
@@ -78,6 +79,7 @@ Game::Game()
 	m_levels = 3;
 	m_currentDistance = 0.f;
 	m_cameraSpeed = 0.05f;
+	m_score = 0; 
 }
 
 // Destructor
@@ -103,7 +105,8 @@ Game::~Game()
 	delete m_pHeightmapTerrain;
 	delete m_pAudio;
 	delete m_pCatmullRom; 
-	delete m_pPlayer; 
+	delete m_pPlayer;
+	delete m_pPickup;
 
 	if (m_pShaderPrograms != NULL) {
 		for (unsigned int i = 0; i < m_pShaderPrograms->size(); i++)
@@ -144,6 +147,7 @@ void Game::Initialise()
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
 	m_pPlayer = new CPlayer; 
+	m_pPickup = new CPickup;
 
 	RECT dimensions = m_gameWindow.GetDimensions();
 
@@ -254,6 +258,8 @@ void Game::Initialise()
 	// Initialise Player 
 	m_pPlayer->Initialise(m_pBikeMesh);
 
+	// Initialise Pickup
+	m_pPickup->Initialise(m_pSphere);
 
 	//============================ AUDIO ======================================//
 	// Initialise audio and play background music
@@ -485,7 +491,9 @@ void Game::Render()
 		m_pSphere->Render();
 	} modelViewMatrixStack.Pop();
 
-	
+	// Render the Pickup
+	m_pPickup->Render(modelViewMatrixStack, pSphereProgram, m_pCamera);
+
 	//============================ Blinn Phong Shader =================================//
 	CShaderProgram* pBlinnProgram = (*m_pShaderPrograms)[3];
 	pBlinnProgram->UseProgram();
@@ -564,6 +572,9 @@ void Game::Update()
 
 	m_t += (float)(0.01f * m_dt);
 	m_currentDistance += (float)(m_cameraSpeed * m_dt);
+
+	//Update pickups
+	m_pPickup->Update(m_dt, m_pPlayer->GetPosition(), m_score);
 
 	//Number of Laps
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 
@@ -709,12 +720,6 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 			break;
 		case VK_F1:
 			m_pAudio->PlayEventSound();
-			break;
-		case VK_LEFT:
-			m_cameraRotation -= m_dt*0.1f;
-			break;
-		case VK_RIGHT:
-			m_cameraRotation += m_dt*0.1f;
 			break;
 		case 189:
 			if (m_levels > 1) m_levels = m_levels - 1;

@@ -21,6 +21,7 @@ class CUrchin;
 class CHeightMapTerrain;
 class CCatmullRom;
 class CPlayer; 
+class CPickup;
 
 class Game {
 private:
@@ -52,6 +53,7 @@ private:
 	CAudio *m_pAudio;
 	CCatmullRom* m_pCatmullRom; 
 	CPlayer* m_pPlayer; 
+	CPickup* m_pPickup;
 
 	// Some other member variables
 	double m_dt;
@@ -61,7 +63,7 @@ private:
 	int m_levels;
 	float m_currentDistance; 
 	float m_cameraSpeed; 
-	float m_cameraRotation; 
+	float m_score;
 
 public:
 	Game();
@@ -79,7 +81,6 @@ private:
 	HINSTANCE m_hInstance;
 	int m_frameCount;
 	double m_elapsedTime;
-
 };
 
 

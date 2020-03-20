@@ -133,6 +133,7 @@
     <ClInclude Include="HighResolutionTimer.h" />
     <ClInclude Include="MatrixStack.h" />
     <ClInclude Include="OpenAssetImportMesh.h" />
+    <ClInclude Include="Pickup.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Shaders.h" />
@@ -157,6 +158,7 @@
     <ClCompile Include="HighResolutionTimer.cpp" />
     <ClCompile Include="MatrixStack.cpp" />
     <ClCompile Include="OpenAssetImportMesh.cpp" />
+    <ClCompile Include="Pickup.cpp" />
     <ClCompile Include="Plane.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Shaders.cpp" />
