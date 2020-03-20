@@ -80,6 +80,8 @@ Game::Game()
 	m_cameraSpeed = 0.05f;
 	m_score = 0; 
 	m_lightswitch = true;
+	lightPosition1 = { -150, 200, -50, 1 };
+	playerLightPosition = {};
 }
 
 // Destructor
@@ -294,7 +296,6 @@ void Game::Render()
 	glm::mat3 viewNormalMatrix = m_pCamera->ComputeNormalMatrix(viewMatrix);
 	
 	// Set light and materials in main shader program
-	glm::vec4 lightPosition1(-100, 100, -100, 1); // Position of light source *in world coordinates* 
 	pMainProgram->SetUniform("light1.position", viewMatrix*lightPosition1); // Position of light source *in eye coordinates*
 	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f));		// Ambient colour of light
 	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f));		// Diffuse colour of light
@@ -476,6 +477,16 @@ void Game::Render()
 		m_pSphere->Render();
 	} modelViewMatrixStack.Pop();
 
+	//Render Light 1
+	modelViewMatrixStack.Push(); {
+		modelViewMatrixStack.Translate(glm::vec3(lightPosition1.x, lightPosition1.y-20.f, lightPosition1.z));
+		modelViewMatrixStack.Scale(10.0f);
+		pSphereProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pSphereProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pSphere->Render();
+	} modelViewMatrixStack.Pop();
+
+
 	// Render the Pickup
 	m_pPickup->Render(modelViewMatrixStack, pSphereProgram, m_pCamera);
 
@@ -495,7 +506,7 @@ void Game::Render()
 void Game::Update() 
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	//m_pCamera->Update(m_dt); 
+	m_pCamera->Update(m_dt); 
 
 	//m_pAudio->Update();
 
@@ -510,12 +521,12 @@ void Game::Update()
 	glm::vec3 T = glm::normalize(pNext - p);
 	glm::vec3 P = p + up*10.f;
 	glm::vec3 viewpt = P + 10.0f * T; 
-	m_pCamera->Set(P, viewpt, upNextNext);
+	//m_pCamera->Set(P, viewpt, upNextNext);
 
 	//Set Player
 	glm::vec3 PlayerT = glm::normalize(playerP - pNext);
 	m_pPlayer->Set(pNext, PlayerT, upNext);
-	m_pPlayer->Update(m_dt);
+	//m_pPlayer->Update(m_dt);
 
 	m_t += (float)(0.01f * m_dt);
 	m_currentDistance += (float)(m_cameraSpeed * m_dt);

@@ -64,6 +64,8 @@ private:
 	float m_cameraSpeed; 
 	float m_score;
 	bool m_lightswitch;
+	glm::vec4 lightPosition1;
+	glm::vec4 playerLightPosition;
 
 public:
 	Game();
