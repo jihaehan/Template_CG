@@ -297,6 +297,8 @@ void Game::Render()
 	// Set light and materials in main shader program
 	glm::vec4 lightPosition1(-150, 200, -50, 1);
 	glm::vec4 spotLightPosition1( -150, 500, -50, 1 );
+	glm::vec4 spotLightPosition2(m_pPlayer->GetPosition() 
+		+ m_pPlayer->GetUpVector() * 10.f, 1);
 	pMainProgram->SetUniform("light1.position", viewMatrix*lightPosition1);		// Position of light source *in eye coordinates*
 	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f * m_lightswitch));		// Ambient colour of light
 	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f * m_lightswitch));		// Diffuse colour of light
@@ -308,9 +310,16 @@ void Game::Render()
 	pMainProgram->SetUniform("spotlight1.Ls", glm::vec3(1.0f - 1.0f * m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
 	pMainProgram->SetUniform("spotlight1.exponent", 20.0f);
 	pMainProgram->SetUniform("spotlight1.cutoff", 100.f);
-	pMainProgram->SetUniform("material1.Ma", glm::vec3(1.0f * m_lightswitch));	// Ambient material reflectance
+	pMainProgram->SetUniform("spotlight2.position", viewMatrix * spotLightPosition2);
+	pMainProgram->SetUniform("spotlight2.direction", glm::normalize(viewNormalMatrix * (m_pPlayer->GetView() -m_pPlayer->GetUpVector())));
+	pMainProgram->SetUniform("spotlight2.La", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight2.Ld", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight2.Ls", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight2.exponent", 10.0f);
+	pMainProgram->SetUniform("spotlight2.cutoff", 50.f);
+	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.9f * m_lightswitch));	// Ambient material reflectance
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.6f));	// Diffuse material reflectance
-	pMainProgram->SetUniform("material1.Ms", glm::vec3(3.0f));	// Specular material reflectance
+	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance
 	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 		
 	// Render the skybox and terrain with full ambient reflectance 
@@ -336,11 +345,11 @@ void Game::Render()
 	modelViewMatrixStack.Pop();
 
 	// Turn on diffuse + specular materials 
-	/*
+	
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f * m_lightswitch));	// Ambient material reflectance
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
-	*/
+	
 	// Render the barrel 
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(100.0f, 0.0f, 0.0f));
@@ -471,27 +480,16 @@ void Game::Render()
 	pSphereProgram->SetUniform("light1.position", viewMatrix* lightPosition1);
 	pSphereProgram->SetUniform("t", m_t);
 
-	// Render the sphere
-	modelViewMatrixStack.Push();{
-		modelViewMatrixStack.Translate(glm::vec3(0.0f, 2.0f, 150.0f));
-		modelViewMatrixStack.Scale(2.0f);
-		pSphereProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
-		pSphereProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pSphereProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		// To turn off texture mapping and use the sphere colour only (currently white material), uncomment the next line
-		//pMainProgram->SetUniform("bUseTexture", false);
-		m_pSphere->Render();
-	} modelViewMatrixStack.Pop();
-
 	//Render Light 1
 	modelViewMatrixStack.Push(); {
 		modelViewMatrixStack.Translate(glm::vec3(lightPosition1.x, lightPosition1.y-20.f, lightPosition1.z));
 		modelViewMatrixStack.Scale(10.0f);
 		pSphereProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pSphereProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// To turn off texture mapping and use the sphere colour only (currently white material), uncomment the next line
+		//pMainProgram->SetUniform("bUseTexture", false);
 		m_pSphere->Render();
 	} modelViewMatrixStack.Pop();
-
 
 	// Render the Pickup
 	m_pPickup->Render(modelViewMatrixStack, pSphereProgram, m_pCamera);
@@ -512,7 +510,7 @@ void Game::Render()
 void Game::Update() 
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	m_pCamera->Update(m_dt); 
+	//m_pCamera->Update(m_dt); 
 
 	//m_pAudio->Update();
 
@@ -527,12 +525,12 @@ void Game::Update()
 	glm::vec3 T = glm::normalize(pNext - p);
 	glm::vec3 P = p + up*10.f;
 	glm::vec3 viewpt = P + 10.0f * T; 
-	//m_pCamera->Set(P, viewpt, upNextNext);
+	m_pCamera->Set(P, viewpt, upNextNext);
 
 	//Set Player
 	glm::vec3 PlayerT = glm::normalize(playerP - pNext);
 	m_pPlayer->Set(pNext, PlayerT, upNext);
-	//m_pPlayer->Update(m_dt);
+	m_pPlayer->Update(m_dt);
 
 	m_t += (float)(0.01f * m_dt);
 	m_currentDistance += (float)(m_cameraSpeed * m_dt);
