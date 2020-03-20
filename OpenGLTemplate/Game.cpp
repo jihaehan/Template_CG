@@ -80,8 +80,7 @@ Game::Game()
 	m_cameraSpeed = 0.05f;
 	m_score = 0; 
 	m_lightswitch = true;
-	lightPosition1 = { -150, 200, -50, 1 };
-	playerLightPosition = {};
+
 }
 
 // Destructor
@@ -296,12 +295,21 @@ void Game::Render()
 	glm::mat3 viewNormalMatrix = m_pCamera->ComputeNormalMatrix(viewMatrix);
 	
 	// Set light and materials in main shader program
-	pMainProgram->SetUniform("light1.position", viewMatrix*lightPosition1); // Position of light source *in eye coordinates*
-	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f));		// Ambient colour of light
-	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f));		// Diffuse colour of light
-	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f));		// Specular colour of light
-	pMainProgram->SetUniform("material1.Ma", glm::vec3(m_lightswitch));	// Ambient material reflectance
-	pMainProgram->SetUniform("material1.Md", glm::vec3(0.6f * m_lightswitch));	// Diffuse material reflectance
+	glm::vec4 lightPosition1(-150, 200, -50, 1);
+	glm::vec4 spotLightPosition1( -150, 500, -50, 1 );
+	pMainProgram->SetUniform("light1.position", viewMatrix*lightPosition1);		// Position of light source *in eye coordinates*
+	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f * m_lightswitch));		// Ambient colour of light
+	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f * m_lightswitch));		// Diffuse colour of light
+	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f * m_lightswitch));		// Specular colour of light
+	pMainProgram->SetUniform("spotlight1.position", viewMatrix * spotLightPosition1); 
+	pMainProgram->SetUniform("spotlight1.direction", glm::normalize(viewNormalMatrix * glm::vec3(0, -1, 0)));
+	pMainProgram->SetUniform("spotlight1.La", glm::vec3(1.0f - 1.0f*m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight1.Ld", glm::vec3(1.0f - 1.0f * m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight1.Ls", glm::vec3(1.0f - 1.0f * m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight1.exponent", 20.0f);
+	pMainProgram->SetUniform("spotlight1.cutoff", 100.f);
+	pMainProgram->SetUniform("material1.Ma", glm::vec3(1.0f * m_lightswitch));	// Ambient material reflectance
+	pMainProgram->SetUniform("material1.Md", glm::vec3(0.6f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(3.0f));	// Specular material reflectance
 	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 		
@@ -327,11 +335,12 @@ void Game::Render()
 	m_pHeightmapTerrain->Render();
 	modelViewMatrixStack.Pop();
 
-	// Turn on diffuse + specular materials
+	// Turn on diffuse + specular materials 
+	/*
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f * m_lightswitch));	// Ambient material reflectance
-	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f * m_lightswitch));	// Diffuse material reflectance
+	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
-	
+	*/
 	// Render the barrel 
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(100.0f, 0.0f, 0.0f));
@@ -410,7 +419,6 @@ void Game::Render()
 	
 	// Render Camera Path
 	modelViewMatrixStack.Push(); {
-		pMainProgram->SetUniform("bUseTexture", false); 
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix",
 		m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
@@ -419,7 +427,6 @@ void Game::Render()
 
 	// Render Offset curves
 	modelViewMatrixStack.Push(); {
-		pMainProgram->SetUniform("bUseTexture", false);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix",
 			m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
@@ -428,7 +435,6 @@ void Game::Render()
 
 	// Render Track
 	modelViewMatrixStack.Push(); {
-		pMainProgram->SetUniform("bUseTexture", true);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix",
 			m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
