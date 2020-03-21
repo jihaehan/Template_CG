@@ -154,6 +154,7 @@ void Game::Initialise()
 	m_pPlayer = new CPlayer; 
 	m_pPickup = new CPickup;
 	m_pFBO = new CFrameBufferObject;
+	m_pTV = new CPlane;
 
 	RECT dimensions = m_gameWindow.GetDimensions();
 
@@ -163,6 +164,8 @@ void Game::Initialise()
 	// Set the orthographic and perspective projection matrices based on the image size
 	m_pCamera->SetOrthographicProjectionMatrix(width, height); 
 	m_pCamera->SetPerspectiveProjectionMatrix(45.0f, (float) width / (float) height, 0.5f, 5000.0f);
+	
+	//============================ SHADERS ======================================//
 
 	// Load shaders
 	vector<CShader> shShaders;
@@ -171,8 +174,8 @@ void Game::Initialise()
 	sShaderFileNames.push_back("mainShader.frag");
 	sShaderFileNames.push_back("textShader.vert");
 	sShaderFileNames.push_back("textShader.frag");
-	sShaderFileNames.push_back("sphereShader.vert");
-	sShaderFileNames.push_back("sphereShader.frag");
+	sShaderFileNames.push_back("sphereShaderEd.vert");
+	sShaderFileNames.push_back("sphereShaderEd.frag");
 
 	for (int i = 0; i < (int) sShaderFileNames.size(); i++) {
 		string sExt = sShaderFileNames[i].substr((int) sShaderFileNames[i].size()-4, 4);
@@ -187,7 +190,6 @@ void Game::Initialise()
 		shShaders.push_back(shader);
 	}
 
-	//============================ SHADERS ======================================//
 	// Create the main shader program
 	CShaderProgram *pMainProgram = new CShaderProgram;		
 	pMainProgram->CreateProgram();
@@ -248,12 +250,15 @@ void Game::Initialise()
 	// Create a heightmap terrain
 	m_pHeightmapTerrain->Create("resources\\textures\\heightmap_s.png", "resources\\textures\\vangogh_sower.png", glm::vec3(0, 0, 0), 900.0f, 900.0f, 150.f);
 
-
 	// Initialise Player 
 	m_pPlayer->Initialise(m_pBikeMesh);
 
 	// Initialise Pickup
 	m_pPickup->Initialise(m_pSphere);
+
+	// Initialize TV
+	m_pTV->Create("resources\\textures\\", "grassfloor01.jpg", 40.0f, 30.0f, 1.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+
 
 	//============================ AUDIO ======================================//
 	// Initialise audio and play background music
@@ -368,8 +373,8 @@ void Game::Render()
 	m_pHeightmapTerrain->Render();
 	modelViewMatrixStack.Pop();
 
+
 	// Turn on diffuse + specular materials 
-	
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f * m_lightswitch));	// Ambient material reflectance
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
@@ -493,8 +498,7 @@ void Game::Render()
 
 	//m_pPickup->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
 
-	pMainProgram->SetUniform("bUseTexture", false);
-
+	pMainProgram->SetUniform("bUseTexture", false); //ensures that textures are off for sphere shader
 	//============================ SPHERE SHADER ======================================//
 	// Switch to the sphere program
 	CShaderProgram* pSphereProgram = (*m_pShaderPrograms)[2];
@@ -510,15 +514,6 @@ void Game::Render()
 	pSphereProgram->SetUniform("light1.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
 	pSphereProgram->SetUniform("light1.position", viewMatrix*lightPosition1);
 	pSphereProgram->SetUniform("t", m_t);
-
-	modelViewMatrixStack.Push(); {
-		modelViewMatrixStack.Translate(glm::vec3(0.0f, 5.0f, 50.0f));
-		modelViewMatrixStack.Scale(5.0f);
-		pSphereProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
-		pSphereProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pSphereProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pSphere->Render();
-	} modelViewMatrixStack.Pop();
 
 	// Render the Pickup
 	m_pPickup->Render(modelViewMatrixStack, pSphereProgram, m_pCamera);

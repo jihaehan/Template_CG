@@ -30,6 +30,7 @@ private:
 	void Initialise();
 	void Update();
 	void Render();
+	void RenderScene(int pass);
 
 	// Pointers to game objects.  They will get allocated in Game::Initialise()
 	CSkybox *m_pSkybox;
