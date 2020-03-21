@@ -126,6 +126,7 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="Cubemap.h" />
     <ClInclude Include="FaceVertexMesh.h" />
+    <ClInclude Include="FrameBufferObject.h" />
     <ClInclude Include="FreeTypeFont.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameWindow.h" />
@@ -151,6 +152,7 @@
     <ClCompile Include="CatmullRom.cpp" />
     <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="FaceVertexMesh.cpp" />
+    <ClCompile Include="FrameBufferObject.cpp" />
     <ClCompile Include="FreeTypeFont.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameWindow.cpp" />

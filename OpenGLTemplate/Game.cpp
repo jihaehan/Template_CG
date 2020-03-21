@@ -42,8 +42,8 @@ Source code drawn from a number of sources and examples, including contributions
 #include "Audio.h"
 #include "CatmullRom.h"
 #include "Player.h"
-#include "Plane.h"
 #include "Pickup.h"
+#include "FrameBufferObject.h"
 
 // Constructor
 Game::Game()
@@ -70,6 +70,8 @@ Game::Game()
 	m_pCatmullRom = NULL;
 	m_pPlayer = NULL; 
 	m_pPickup = NULL;
+	m_pFBO = NULL;
+	m_pTV = NULL;
 
 	m_dt = 0.0;
 	m_t = 0.0;
@@ -108,6 +110,9 @@ Game::~Game()
 	delete m_pCatmullRom; 
 	delete m_pPlayer;
 	delete m_pPickup;
+	delete m_pFBO;
+	delete m_pTV;
+
 
 	if (m_pShaderPrograms != NULL) {
 		for (unsigned int i = 0; i < m_pShaderPrograms->size(); i++)
@@ -148,6 +153,7 @@ void Game::Initialise()
 	m_pCatmullRom = new CCatmullRom;
 	m_pPlayer = new CPlayer; 
 	m_pPickup = new CPickup;
+	m_pFBO = new CFrameBufferObject;
 
 	RECT dimensions = m_gameWindow.GetDimensions();
 
@@ -165,8 +171,8 @@ void Game::Initialise()
 	sShaderFileNames.push_back("mainShader.frag");
 	sShaderFileNames.push_back("textShader.vert");
 	sShaderFileNames.push_back("textShader.frag");
-	sShaderFileNames.push_back("sphereShaderEd.vert");
-	sShaderFileNames.push_back("sphereShaderEd.frag");
+	sShaderFileNames.push_back("sphereShader.vert");
+	sShaderFileNames.push_back("sphereShader.frag");
 
 	for (int i = 0; i < (int) sShaderFileNames.size(); i++) {
 		string sExt = sShaderFileNames[i].substr((int) sShaderFileNames[i].size()-4, 4);
@@ -271,6 +277,9 @@ void Game::Render()
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	// Set up a matrix stack
 	glutil::MatrixStack modelViewMatrixStack;
 	modelViewMatrixStack.SetIdentity();
@@ -284,7 +293,6 @@ void Game::Render()
 	// Note: cubemap and non-cubemap textures should not be mixed in the same texture unit.  Setting unit 10 to be a cubemap texture.
 	int cubeMapTextureUnit = 10; 
 	pMainProgram->SetUniform("CubeMapTex", cubeMapTextureUnit);
-	
 
 	// Set the projection matrix
 	pMainProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
@@ -485,22 +493,32 @@ void Game::Render()
 
 	//m_pPickup->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
 
+	pMainProgram->SetUniform("bUseTexture", false);
+
 	//============================ SPHERE SHADER ======================================//
 	// Switch to the sphere program
 	CShaderProgram* pSphereProgram = (*m_pShaderPrograms)[2];
 	pSphereProgram->UseProgram();
 	
 	// Set light and materials in sphere programme
-	pSphereProgram->SetUniform("light1.position", viewMatrix* lightPosition1);
-	pSphereProgram->SetUniform("light1.La", glm::vec3(0.15f, 0.15f, 0.15f));
-	pSphereProgram->SetUniform("light1.Ld", glm::vec3(1.0f, 1.0f, 1.0f));
-	pSphereProgram->SetUniform("light1.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
 	pSphereProgram->SetUniform("material1.Ma", glm::vec3(0.0f, 1.0f, 0.0f));
 	pSphereProgram->SetUniform("material1.Md", glm::vec3(0.0f, 1.0f, 0.0f));
 	pSphereProgram->SetUniform("material1.Ms", glm::vec3(1.0f, 1.0f, 1.0f));
 	pSphereProgram->SetUniform("material1.shininess", 50.0f);
+	pSphereProgram->SetUniform("light1.La", glm::vec3(0.15f, 0.15f, 0.15f));
+	pSphereProgram->SetUniform("light1.Ld", glm::vec3(1.0f, 1.0f, 1.0f));
+	pSphereProgram->SetUniform("light1.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
+	pSphereProgram->SetUniform("light1.position", viewMatrix*lightPosition1);
 	pSphereProgram->SetUniform("t", m_t);
-	pSphereProgram->SetUniform("levels", m_levels);
+
+	modelViewMatrixStack.Push(); {
+		modelViewMatrixStack.Translate(glm::vec3(0.0f, 5.0f, 50.0f));
+		modelViewMatrixStack.Scale(5.0f);
+		pSphereProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
+		pSphereProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pSphereProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pSphere->Render();
+	} modelViewMatrixStack.Pop();
 
 	// Render the Pickup
 	m_pPickup->Render(modelViewMatrixStack, pSphereProgram, m_pCamera);
@@ -512,6 +530,8 @@ void Game::Render()
 	//============================ SWAP BUFFERS	 ======================================//
 	// Swap buffers to show the rendered image
 	SwapBuffers(m_gameWindow.Hdc());		
+	pSphereProgram->SetUniform("levels", m_levels);
+
 }
 
 // Update method runs repeatedly with the Render method

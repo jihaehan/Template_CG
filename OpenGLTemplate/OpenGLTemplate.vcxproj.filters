@@ -89,6 +89,9 @@
     <ClInclude Include="Pickup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FrameBufferObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Audio.cpp">
@@ -159,6 +162,9 @@
     </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="FrameBufferObject.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

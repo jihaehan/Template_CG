@@ -22,6 +22,7 @@ class CHeightMapTerrain;
 class CCatmullRom;
 class CPlayer; 
 class CPickup;
+class CFrameBufferObject;
 
 class Game {
 private:
@@ -53,6 +54,8 @@ private:
 	CCatmullRom* m_pCatmullRom; 
 	CPlayer* m_pPlayer; 
 	CPickup* m_pPickup;
+	CFrameBufferObject* m_pFBO;
+	CPlane* m_pTV;
 
 	// Some other member variables
 	double m_dt;
