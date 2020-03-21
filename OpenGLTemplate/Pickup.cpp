@@ -1,6 +1,6 @@
 #include "Pickup.h"
 
-CPickup::CPickup()
+CPickup::CPickup() : m_is_active(true)
 {}
 
 CPickup::~CPickup()
@@ -31,6 +31,7 @@ void CPickup::Update(float dt, const glm::vec3 &player_pos, float &score)
 	{
 		m_is_active = false;
 		score += dt * 10.f;
-		CPickup::~CPickup();
 	}
+	else if (m_is_active == false)
+		CPickup::~CPickup();
 }

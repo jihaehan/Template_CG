@@ -5,7 +5,6 @@ uniform struct Matrices
 	mat4 projMatrix;
 	mat4 modelViewMatrix; 
 	mat3 normalMatrix;
-
 } matrices;
 
 layout (location = 0) in vec3 inPosition;

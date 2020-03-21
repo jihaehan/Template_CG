@@ -69,6 +69,7 @@ Game::Game()
 	m_pAudio = NULL;
 	m_pCatmullRom = NULL;
 	m_pPlayer = NULL; 
+	m_pPickup = NULL;
 
 	m_dt = 0.0;
 	m_t = 0.0;
@@ -296,27 +297,42 @@ void Game::Render()
 	
 	// Set light and materials in main shader program
 	glm::vec4 lightPosition1(-150, 200, -50, 1);
-	glm::vec4 spotLightPosition1( -150, 500, -50, 1 );
-	glm::vec4 spotLightPosition2(m_pPlayer->GetPosition() 
-		+ m_pPlayer->GetUpVector() * 10.f, 1);
+	glm::vec4 spotLightPosition0( -150, 500, -50, 1 );
+	glm::vec4 spotLightPosition1(m_pPlayer->GetPosition() + m_pPlayer->GetUpVector() * 10.f, 1);
+	glm::vec4 spotLightPosition2(m_pPlayer->GetPosition() + m_pPlayer->GetUpVector() * 21.f, 1);
+	glm::vec4 spotLightPosition3(-700, 500, 350, 1);
 	pMainProgram->SetUniform("light1.position", viewMatrix*lightPosition1);		// Position of light source *in eye coordinates*
 	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f * m_lightswitch));		// Ambient colour of light
 	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f * m_lightswitch));		// Diffuse colour of light
 	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f * m_lightswitch));		// Specular colour of light
-	pMainProgram->SetUniform("spotlight1.position", viewMatrix * spotLightPosition1); 
-	pMainProgram->SetUniform("spotlight1.direction", glm::normalize(viewNormalMatrix * glm::vec3(0, -1, 0)));
-	pMainProgram->SetUniform("spotlight1.La", glm::vec3(1.0f - 1.0f*m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
-	pMainProgram->SetUniform("spotlight1.Ld", glm::vec3(1.0f - 1.0f * m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
-	pMainProgram->SetUniform("spotlight1.Ls", glm::vec3(1.0f - 1.0f * m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
-	pMainProgram->SetUniform("spotlight1.exponent", 20.0f);
-	pMainProgram->SetUniform("spotlight1.cutoff", 100.f);
-	pMainProgram->SetUniform("spotlight2.position", viewMatrix * spotLightPosition2);
-	pMainProgram->SetUniform("spotlight2.direction", glm::normalize(viewNormalMatrix * (m_pPlayer->GetView() -m_pPlayer->GetUpVector())));
-	pMainProgram->SetUniform("spotlight2.La", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
-	pMainProgram->SetUniform("spotlight2.Ld", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
-	pMainProgram->SetUniform("spotlight2.Ls", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
-	pMainProgram->SetUniform("spotlight2.exponent", 10.0f);
-	pMainProgram->SetUniform("spotlight2.cutoff", 50.f);
+	pMainProgram->SetUniform("spotlight[0].position", viewMatrix * spotLightPosition0); 
+	pMainProgram->SetUniform("spotlight[0].direction", glm::normalize(viewNormalMatrix * glm::vec3(0, -1, 0)));
+	pMainProgram->SetUniform("spotlight[0].La", glm::vec3(.7f - .7f * m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[0].Ld", glm::vec3(.7f - .7f * m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[0].Ls", glm::vec3(.7f - .7f * m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[0].exponent", 20.0f);
+	pMainProgram->SetUniform("spotlight[0].cutoff", 100.f);
+	pMainProgram->SetUniform("spotlight[1].position", viewMatrix * spotLightPosition1);
+	pMainProgram->SetUniform("spotlight[1].direction", glm::normalize(viewNormalMatrix * (m_pPlayer->GetView() - m_pPlayer->GetUpVector())));
+	pMainProgram->SetUniform("spotlight[1].La", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[1].Ld", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[1].Ls", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[1].exponent", 10.0f);
+	pMainProgram->SetUniform("spotlight[1].cutoff", 50.f);
+	pMainProgram->SetUniform("spotlight[2].position", viewMatrix * spotLightPosition2);
+	pMainProgram->SetUniform("spotlight[2].direction", glm::normalize(viewNormalMatrix * (- m_pPlayer->GetUpVector())));
+	pMainProgram->SetUniform("spotlight[2].La", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[2].Ld", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[2].Ls", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[2].exponent", 30.0f);
+	pMainProgram->SetUniform("spotlight[2].cutoff", 30.f);
+	pMainProgram->SetUniform("spotlight[3].position", viewMatrix * spotLightPosition3);
+	pMainProgram->SetUniform("spotlight[3].direction", glm::normalize(viewNormalMatrix * glm::vec3(1, -1, -1)));
+	pMainProgram->SetUniform("spotlight[3].La", glm::vec3(0.f, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[3].Ld", glm::vec3(0.f, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[3].Ls", glm::vec3(0.f, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pMainProgram->SetUniform("spotlight[3].exponent", 20.0f);
+	pMainProgram->SetUniform("spotlight[3].cutoff", 100.f);
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.9f * m_lightswitch));	// Ambient material reflectance
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.6f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance
@@ -426,30 +442,6 @@ void Game::Render()
 		m_pUrchin->Render();
 	modelViewMatrixStack.Pop();
 	
-	// Render Camera Path
-	modelViewMatrixStack.Push(); {
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix",
-		m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pCatmullRom->RenderCentreline();
-	} modelViewMatrixStack.Pop();
-
-	// Render Offset curves
-	modelViewMatrixStack.Push(); {
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix",
-			m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pCatmullRom->RenderOffsetCurves();
-	} modelViewMatrixStack.Pop();
-
-	// Render Track
-	modelViewMatrixStack.Push(); {
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix",
-			m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pCatmullRom->RenderTrack();
-	} modelViewMatrixStack.Pop();
-	
 	// Render the horse
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(0,5,0));
@@ -463,33 +455,52 @@ void Game::Render()
 	// Render the player
 	m_pPlayer->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
 
+	pMainProgram->SetUniform("material1.Ms", glm::vec3(5.0f));	// Specular material reflectance
+	pMainProgram->SetUniform("material1.shininess", 50.0f);		// Shininess material property
+
+	// Render Camera Path
+	/*
+	modelViewMatrixStack.Push(); {
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix",
+			m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pCatmullRom->RenderCentreline();
+	} modelViewMatrixStack.Pop();
+	*/
+	// Render Offset curves
+	/*
+	modelViewMatrixStack.Push(); {
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix",
+			m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pCatmullRom->RenderOffsetCurves();
+	} modelViewMatrixStack.Pop();
+	*/
+	// Render Track
+	modelViewMatrixStack.Push(); {
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pCatmullRom->RenderTrack();
+	} modelViewMatrixStack.Pop();
+
+	//m_pPickup->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
 
 	//============================ SPHERE SHADER ======================================//
 	// Switch to the sphere program
 	CShaderProgram* pSphereProgram = (*m_pShaderPrograms)[2];
 	pSphereProgram->UseProgram();
-
+	
 	// Set light and materials in sphere programme
+	pSphereProgram->SetUniform("light1.position", viewMatrix* lightPosition1);
+	pSphereProgram->SetUniform("light1.La", glm::vec3(0.15f, 0.15f, 0.15f));
+	pSphereProgram->SetUniform("light1.Ld", glm::vec3(1.0f, 1.0f, 1.0f));
+	pSphereProgram->SetUniform("light1.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
 	pSphereProgram->SetUniform("material1.Ma", glm::vec3(0.0f, 1.0f, 0.0f));
 	pSphereProgram->SetUniform("material1.Md", glm::vec3(0.0f, 1.0f, 0.0f));
 	pSphereProgram->SetUniform("material1.Ms", glm::vec3(1.0f, 1.0f, 1.0f));
 	pSphereProgram->SetUniform("material1.shininess", 50.0f);
-	pSphereProgram->SetUniform("light1.La", glm::vec3(0.15f, 0.15f, 0.15f));
-	pSphereProgram->SetUniform("light1.Ld", glm::vec3(1.0f, 1.0f, 1.0f));
-	pSphereProgram->SetUniform("light1.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
-	pSphereProgram->SetUniform("light1.position", viewMatrix* lightPosition1);
 	pSphereProgram->SetUniform("t", m_t);
-
-	//Render Light 1
-	modelViewMatrixStack.Push(); {
-		modelViewMatrixStack.Translate(glm::vec3(lightPosition1.x, lightPosition1.y-20.f, lightPosition1.z));
-		modelViewMatrixStack.Scale(10.0f);
-		pSphereProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pSphereProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		// To turn off texture mapping and use the sphere colour only (currently white material), uncomment the next line
-		//pMainProgram->SetUniform("bUseTexture", false);
-		m_pSphere->Render();
-	} modelViewMatrixStack.Pop();
+	pSphereProgram->SetUniform("levels", m_levels);
 
 	// Render the Pickup
 	m_pPickup->Render(modelViewMatrixStack, pSphereProgram, m_pCamera);
@@ -501,9 +512,6 @@ void Game::Render()
 	//============================ SWAP BUFFERS	 ======================================//
 	// Swap buffers to show the rendered image
 	SwapBuffers(m_gameWindow.Hdc());		
-	pSphereProgram->SetUniform("levels", m_levels); 
-
-
 }
 
 // Update method runs repeatedly with the Render method

@@ -23,8 +23,7 @@ struct MaterialInfo
 };
 
 uniform LightInfo light1; 
-uniform LightInfo spotlight1;
-uniform LightInfo spotlight2;
+uniform LightInfo spotlight[4];
 uniform MaterialInfo material1; 
 
 in vec4 eyePosition;
@@ -77,9 +76,10 @@ in vec3 worldPosition;
 
 void main()
 {
-	vec3 vColour = PhongModel(eyePosition, normalize(eyeNorm))						//world light
-		+ BlinnPhongSpotlightModel(spotlight1, eyePosition, normalize(eyeNorm))		//spotlight1
-		+ BlinnPhongSpotlightModel(spotlight2, eyePosition, normalize(eyeNorm));	//spotlight2
+	vec3 vColour = PhongModel(eyePosition, normalize(eyeNorm));						//world light
+	for (int i = 0; i < 4; i++) {
+		vColour += BlinnPhongSpotlightModel(spotlight[i], eyePosition, normalize(eyeNorm));	//spotlight1
+	}	
 
 	if (renderSkybox) {
 		vOutputColour = texture(CubeMapTex, worldPosition);
