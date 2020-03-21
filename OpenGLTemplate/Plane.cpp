@@ -13,12 +13,12 @@ CPlane::~CPlane()
 // Create the plane, including its geometry, texture mapping, normal, and colour
 void CPlane::Create(string directory, string filename, float width, float height, float textureRepeat)
 {
-	
+
 	m_width = width;
 	m_height = height;
 
 	// Load the texture
-	m_texture.Load(directory+filename, true);
+	m_texture.Load(directory + filename, true);
 
 	m_directory = directory;
 	m_filename = filename;
@@ -28,7 +28,7 @@ void CPlane::Create(string directory, string filename, float width, float height
 	m_texture.SetSamplerObjectParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	m_texture.SetSamplerObjectParameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
 	m_texture.SetSamplerObjectParameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-	
+
 
 	// Use VAO to store state associated with vertices
 	glGenVertexArrays(1, &m_vao);
@@ -42,20 +42,20 @@ void CPlane::Create(string directory, string filename, float width, float height
 	float halfHeight = m_height / 2.0f;
 
 	// Vertex positions
-	glm::vec3 planeVertices[4] = 
+	glm::vec3 planeVertices[4] =
 	{
-		glm::vec3(-halfWidth, 0.0f, -halfHeight), 
-		glm::vec3(-halfWidth, 0.0f, halfHeight), 
-		glm::vec3(halfWidth, 0.0f, -halfHeight), 
-		glm::vec3(halfWidth, 0.0f, halfHeight), 
+		glm::vec3(-halfWidth, 0.0f, -halfHeight),
+		glm::vec3(-halfWidth, 0.0f, halfHeight),
+		glm::vec3(halfWidth, 0.0f, -halfHeight),
+		glm::vec3(halfWidth, 0.0f, halfHeight),
 	};
 
 	// Texture coordinates
 	glm::vec2 planeTexCoords[4] =
 	{
-		glm::vec2(0.0f, 0.0f), 
-		glm::vec2(0.0f, textureRepeat), 
-		glm::vec2(textureRepeat, 0.0f), 
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(0.0f, textureRepeat),
+		glm::vec2(textureRepeat, 0.0f),
 		glm::vec2(textureRepeat, textureRepeat)
 	};
 
@@ -74,7 +74,7 @@ void CPlane::Create(string directory, string filename, float width, float height
 	m_vbo.UploadDataToGPU(GL_STATIC_DRAW);
 
 	// Set the vertex attribute locations
-	GLsizei istride = 2*sizeof(glm::vec3)+sizeof(glm::vec2);
+	GLsizei istride = 2 * sizeof(glm::vec3) + sizeof(glm::vec2);
 
 	// Vertex positions
 	glEnableVertexAttribArray(0);
@@ -84,17 +84,18 @@ void CPlane::Create(string directory, string filename, float width, float height
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, istride, (void*)sizeof(glm::vec3));
 	// Normal vectors
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, istride, (void*)(sizeof(glm::vec3)+sizeof(glm::vec2)));
-	
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, istride, (void*)(sizeof(glm::vec3) + sizeof(glm::vec2)));
+
 }
 
 // Render the plane as a triangle strip
-void CPlane::Render()
+void CPlane::Render(bool bindTexture)
 {
 	glBindVertexArray(m_vao);
-	m_texture.Bind();
+	if (bindTexture)
+		m_texture.Bind();
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	
+
 }
 
 // Release resources

@@ -15,6 +15,7 @@ public:
 	void Render(glutil::MatrixStack playerStack, CShaderProgram* shaderProgram, CCamera* camera);
 	void Update(float dt, const glm::vec3 &player_pos, float &score);
 	bool Active() { return m_is_active; };
+	glm::vec3 GetPosition() const { return m_position; };
 
 private:
 	CSphere* m_pickup{};

@@ -10,7 +10,7 @@ public:
 	CPlane();
 	~CPlane();
 	void Create(string sDirectory, string sFilename, float fWidth, float fHeight, float fTextureRepeat);
-	void Render();
+	void Render(bool bindTexture=true);
 	void Release();
 private:
 	UINT m_vao;

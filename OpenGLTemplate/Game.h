@@ -68,6 +68,9 @@ private:
 	float m_cameraSpeed; 
 	float m_score;
 	bool m_lightswitch;
+	bool m_TVActive;
+	float m_close;
+	float m_lightup;
 
 public:
 	Game();
