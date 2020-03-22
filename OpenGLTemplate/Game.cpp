@@ -223,7 +223,7 @@ void Game::Initialise()
 	// Skybox downloaded from http://www.akimbo.in/forum/viewtopic.php?f=10&t=9
 	m_pSkybox->Create(2500.0f);
 	
-	m_pFtFont->LoadSystemFont("arial.ttf", 32);
+	m_pFtFont->LoadSystemFont("OCRAEXT.ttf", 32);
 	m_pFtFont->SetShaderProgram(pFontProgram);
 
 	// Load some meshes in OBJ/3ds format
@@ -615,7 +615,8 @@ void Game::DisplayFrameRate()
 	
 	fontProgram->SetUniform("matrices.modelViewMatrix", glm::mat4(1));
 	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
-	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+	m_pFtFont->Render(20, height - 50, 20, "Score: %d", m_score);
 
 	// Increase the elapsed time and frame counter
 	m_elapsedTime += m_dt;
@@ -635,9 +636,6 @@ void Game::DisplayFrameRate()
 	if (m_framesPerSecond > 0) {
 		// Use the font shader program and render the text
 		m_pFtFont->Render(20, height - 20, 20, "FPS: %d", m_framesPerSecond);
-	}
-	if (m_score > 0) {
-		m_pFtFont->Render(20, height - 50, 20, "Score: %d", m_score);
 	}
 }
 
