@@ -608,9 +608,14 @@ void Game::Update()
 void Game::DisplayFrameRate()
 {
 	CShaderProgram *fontProgram = (*m_pShaderPrograms)[1];
-
+	fontProgram->UseProgram();
+	glDisable(GL_DEPTH_TEST);
 	RECT dimensions = m_gameWindow.GetDimensions();
 	int height = dimensions.bottom - dimensions.top;
+	
+	fontProgram->SetUniform("matrices.modelViewMatrix", glm::mat4(1));
+	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
+	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
 	// Increase the elapsed time and frame counter
 	m_elapsedTime += m_dt;
@@ -629,12 +634,10 @@ void Game::DisplayFrameRate()
 
 	if (m_framesPerSecond > 0) {
 		// Use the font shader program and render the text
-		fontProgram->UseProgram();
-		glDisable(GL_DEPTH_TEST);
-		fontProgram->SetUniform("matrices.modelViewMatrix", glm::mat4(1));
-		fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
-		fontProgram->SetUniform("vColour", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		m_pFtFont->Render(20, height - 20, 20, "FPS: %d", m_framesPerSecond);
+	}
+	if (m_score > 0) {
+		m_pFtFont->Render(20, height - 50, 20, "Score: %d", m_score);
 	}
 }
 

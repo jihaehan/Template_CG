@@ -25,12 +25,12 @@ void CPickup::Render(glutil::MatrixStack matrixStack, CShaderProgram* shaderProg
 	}
 }
 
-void CPickup::Update(float dt, const glm::vec3 &player_pos, float &score)
+void CPickup::Update(float dt, const glm::vec3 &player_pos, int &score)
 {
 	if ((m_is_active == true) && glm::distance(player_pos, m_position) < 4.0f)
 	{
 		m_is_active = false;
-		score += dt * 10.f;
+		score += 10;
 	}
 	else if (m_is_active == false)
 		CPickup::~CPickup();

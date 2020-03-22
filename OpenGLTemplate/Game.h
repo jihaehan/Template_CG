@@ -66,7 +66,7 @@ private:
 	int m_levels;
 	float m_currentDistance; 
 	float m_cameraSpeed; 
-	float m_score;
+	int m_score;
 	bool m_lightswitch;
 	bool m_TVActive;
 	float m_close;
