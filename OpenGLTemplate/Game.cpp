@@ -43,6 +43,7 @@ Source code drawn from a number of sources and examples, including contributions
 #include "CatmullRom.h"
 #include "Player.h"
 #include "Pickup.h"
+#include "Bomb.h"
 #include "FrameBufferObject.h"
 
 // Constructor
@@ -70,6 +71,7 @@ Game::Game()
 	m_pCatmullRom = NULL;
 	m_pPlayer = NULL; 
 	m_pPickups = NULL;
+	m_pBombs = NULL;
 	m_pFBO = NULL;
 	m_pTV = NULL;
 
@@ -82,9 +84,11 @@ Game::Game()
 	m_currentDistance = 0.f;
 	m_cameraSpeed = 0.05f;
 	m_score = 0; 
+	m_health = 100;
 	m_lightswitch = true;
 	m_TVActive = false;
 	m_close = 0;
+	m_trap = 0;
 	m_lightup = 0;
 }
 
@@ -127,6 +131,12 @@ Game::~Game()
 	}
 	delete m_pPickups;
 
+	if (m_pBombs != NULL) {
+		for (unsigned int i = 0; i < m_pBombs->size(); i++)
+			delete (*m_pBombs)[i];
+	}
+	delete m_pBombs;
+
 	//setup objects
 	delete m_pHighResolutionTimer;
 }
@@ -160,6 +170,7 @@ void Game::Initialise()
 	m_pCatmullRom = new CCatmullRom;
 	m_pPlayer = new CPlayer; 
 	m_pPickups = new vector <CPickup*>;
+	m_pBombs = new vector <CBomb*>;
 	m_pFBO = new CFrameBufferObject;
 	m_pTV = new CPlane;
 
@@ -251,7 +262,7 @@ void Game::Initialise()
 	glEnable(GL_CULL_FACE);
 
 	// Create an urchin
-	m_pUrchin->Create("resources\\textures\\", "dirtpile02.png", 20);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	m_pUrchin->Create("resources\\textures\\", "dirtpile02.png", 4);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
 		
 	// Create a heightmap terrain
@@ -263,17 +274,24 @@ void Game::Initialise()
 	m_pCatmullRom->CreateTrack("resources\\textures\\", "dirtpile01.jpg");
 	m_pCatmullRom->ComputeTrackPoints();
 
-	//============================ Player and Pickups =========================//
+	//==================== Player, Pickups, and Bombs =========================//
 
 	// Initialise Player 
 	m_pPlayer->Initialise(m_pBikeMesh);
+	srand(time(NULL)); //initialize random value
 
 	// Initialise Vector of Pickup
-	srand(time(NULL)); //initialize random value
 	for (int i = 0; i < m_pickup_num; i++) {
 		int random = rand() % 400;
 		glm::vec3 pickup_pos = m_pCatmullRom->GetTrackPoints()[random] + (m_pCatmullRom->GetOffsetPoints()[random])*(float)(rand()%20);
 		m_pPickups->push_back(new CPickup(m_pSphere, pickup_pos));
+	}
+
+	// Initialise Vector of Bomb
+	for (int i = 0; i < m_bomb_num; i++) {
+		int random = rand() % 400;
+		glm::vec3 bom_pos = m_pCatmullRom->GetTrackPoints()[random] + (m_pCatmullRom->GetOffsetPoints()[random]) * (float)(rand() % 19);
+		m_pBombs->push_back(new CBomb(m_pUrchin, bom_pos));
 	}
 
 	//============================ AUDIO ======================================//
@@ -480,14 +498,6 @@ void Game::RenderScene(int pass)
 	m_pTetrahedron->Render();
 	modelViewMatrixStack.Pop();
 
-	// Render the urchin
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(0.0f, 10.0f, 120.0f));
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pUrchin->Render();
-	modelViewMatrixStack.Pop();
-
 	// Render the horse
 	modelViewMatrixStack.Push();
 	modelViewMatrixStack.Translate(glm::vec3(0, 5, 0));
@@ -527,8 +537,15 @@ void Game::RenderScene(int pass)
 		modelViewMatrixStack.Pop();
 	}
 
-	pMainProgram->SetUniform("bUseTexture", 1 - m_lightswitch); //ensures that textures are off for sphere shader
-	pMainProgram->SetUniform("bUseTransparency", m_lightswitch); //ensures that textures are off for sphere shader
+	
+	// Render the Bomb  
+	for (int i = 0; i < m_bomb_num; i++) {
+		(*m_pBombs)[i]->Render(modelViewMatrixStack, pMainProgram, m_pCamera, m_t);
+	}
+
+	//============================ TRANSPARENCY ==========================================//
+	pMainProgram->SetUniform("bUseTexture", 1 - m_lightswitch); 
+	pMainProgram->SetUniform("bUseTransparency", m_lightswitch);
 
 	// Render Track 
 	modelViewMatrixStack.Push(); {
@@ -539,12 +556,11 @@ void Game::RenderScene(int pass)
 	} modelViewMatrixStack.Pop();
 	
 	// Render the player
-	pMainProgram->SetUniform("vTransparency", 0.3f);
+	pMainProgram->SetUniform("vTransparency", 0.35f);
 	m_pPlayer->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
 
-	//m_pPickup->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
-
 	pMainProgram->SetUniform("bUseTexture", false); //ensures that textures are off for sphere shader
+	
 	//============================ SPHERE SHADER ======================================//
 	// Switch to the sphere program
 	CShaderProgram* pSphereProgram = (*m_pShaderPrograms)[2];
@@ -563,7 +579,7 @@ void Game::RenderScene(int pass)
 	pSphereProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
 	pSphereProgram->SetUniform("levels", m_levels);
 
-	// Render the Pickup
+	// Render the Pickup  
 	for (int i = 0; i < m_pickup_num; i++) {
 		(*m_pPickups)[i]->Render(modelViewMatrixStack, pSphereProgram, m_pCamera);
 	}
@@ -573,6 +589,7 @@ void Game::RenderScene(int pass)
 	//DisplayFrameRate();
 
 	//============================ SWAP BUFFERS	 ======================================//
+	// Swap buffers to show the rendered image
 	// Swap buffers to show the rendered image
 	//SwapBuffers(m_gameWindow.Hdc());
 }
@@ -614,6 +631,12 @@ void Game::Update()
 		(*m_pPickups)[i]->Update(m_dt, m_pPlayer->GetPosition(), m_score);
 		if (m_close <= 70.0f) m_lightup = 1. - m_close / 70.f;
 	}
+	
+	//Update bombs
+	for (int i = 0; i < m_bomb_num; i++) {
+		m_trap = distance(m_pPlayer->GetPosition(), (*m_pBombs)[i]->GetPosition());
+		(*m_pBombs)[i]->Update(m_dt, m_pPlayer->GetPosition(), m_health);
+	}
 
 	//Number of Laps
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 
@@ -627,14 +650,17 @@ void Game::DisplayFrameRate()
 	CShaderProgram *fontProgram = (*m_pShaderPrograms)[1];
 	fontProgram->UseProgram();
 	glDisable(GL_DEPTH_TEST);
+
 	RECT dimensions = m_gameWindow.GetDimensions();
 	int height = dimensions.bottom - dimensions.top;
-	
+	int width = abs(dimensions.right - dimensions.left);
+
 	fontProgram->SetUniform("matrices.modelViewMatrix", glm::mat4(1));
 	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
 	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 	fontProgram->SetUniform("t", (float)m_t/3);
 	m_pFtFont->Render(20, height - 40, 20, "Score: %d", m_score);
+	m_pFtFont->Render(width * 5 / 6, height - 20, 20, "Health: %d", m_health);
 
 	// Increase the elapsed time and frame counter
 	m_elapsedTime += m_dt;

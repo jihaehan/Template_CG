@@ -22,6 +22,7 @@ class CHeightMapTerrain;
 class CCatmullRom;
 class CPlayer; 
 class CPickup;
+class CBomb;
 class CFrameBufferObject;
 
 class Game {
@@ -55,6 +56,7 @@ private:
 	CCatmullRom* m_pCatmullRom; 
 	CPlayer* m_pPlayer; 
 	vector <CPickup*> *m_pPickups;
+	vector <CBomb*>* m_pBombs;
 	CFrameBufferObject* m_pFBO;
 	CPlane* m_pTV;
 
@@ -67,11 +69,14 @@ private:
 	float m_currentDistance; 
 	float m_cameraSpeed; 
 	int m_score;
+	int m_health;
 	bool m_lightswitch;
 	bool m_TVActive;
 	float m_close;
+	float m_trap;
 	float m_lightup;
 	int m_pickup_num = 30;
+	int m_bomb_num = 15;
 
 public:
 	Game();
