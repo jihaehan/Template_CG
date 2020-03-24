@@ -247,11 +247,11 @@ void Game::Initialise()
 	glEnable(GL_CULL_FACE);
 
 	// Create a tetrahedron
-	m_pTetrahedron->Create("resources\\textures\\", "dirtpile01.jpg", 1.5);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	m_pTetrahedron->Create("resources\\textures\\", "green_marble.png", 5);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
 
 	// Create an urchin
-	m_pUrchin->Create("resources\\textures\\", "dirtpile01.jpg", 3);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	m_pUrchin->Create("resources\\textures\\", "dirtpile02.png", 20);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
 		
 	// Create a heightmap terrain
@@ -327,6 +327,7 @@ void Game::RenderScene(int pass)
 	pMainProgram->UseProgram();
 	pMainProgram->SetUniform("bUseTexture", true);
 	pMainProgram->SetUniform("bUseTransparency", false);
+	pMainProgram->SetUniform("vTransparency", 0.f);
 	pMainProgram->SetUniform("sampler0", 0);
 	// Note: cubemap and non-cubemap textures should not be mixed in the same texture unit.  Setting unit 10 to be a cubemap texture.
 	int cubeMapTextureUnit = 10;
@@ -396,7 +397,6 @@ void Game::RenderScene(int pass)
 	pMainProgram->SetUniform("renderSkybox", false);
 	modelViewMatrixStack.Pop();
 
-	
 	// Render the heightmap terrain
 	modelViewMatrixStack.Push();
 	modelViewMatrixStack.Translate(glm::vec3(-140.f, 40.f, 0.f));
@@ -498,9 +498,6 @@ void Game::RenderScene(int pass)
 	m_pHorseMesh->Render();
 	modelViewMatrixStack.Pop();
 
-	// Render the player
-	m_pPlayer->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
-
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.2f + 0.7f * m_lightswitch));	
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(5.0f));	
 	pMainProgram->SetUniform("material1.shininess", 50.0f);	
@@ -530,15 +527,20 @@ void Game::RenderScene(int pass)
 		modelViewMatrixStack.Pop();
 	}
 
+	pMainProgram->SetUniform("bUseTexture", 1 - m_lightswitch); //ensures that textures are off for sphere shader
+	pMainProgram->SetUniform("bUseTransparency", m_lightswitch); //ensures that textures are off for sphere shader
+
 	// Render Track 
 	modelViewMatrixStack.Push(); {
 		pMainProgram->SetUniform("material1.shininess", 50.0f);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		pMainProgram->SetUniform("bUseTexture", 1 - m_lightswitch); //ensures that textures are off for sphere shader
-		pMainProgram->SetUniform("bUseTransparency", m_lightswitch); //ensures that textures are off for sphere shader
 		m_pCatmullRom->RenderTrack();
 	} modelViewMatrixStack.Pop();
+	
+	// Render the player
+	pMainProgram->SetUniform("vTransparency", 0.3f);
+	m_pPlayer->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
 
 	//m_pPickup->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
 
@@ -580,7 +582,7 @@ void Game::RenderScene(int pass)
 void Game::Update() 
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	m_pCamera->Update(m_dt); 
+	//m_pCamera->Update(m_dt); 
 
 	//m_pAudio->Update();
 
@@ -595,12 +597,12 @@ void Game::Update()
 	glm::vec3 T = glm::normalize(pNext - p);
 	glm::vec3 P = p + up*10.f;
 	glm::vec3 viewpt = P + 10.0f * T; 
-	//m_pCamera->Set(P, viewpt, upNextNext);
+	m_pCamera->Set(P, viewpt, upNextNext);
 
 	//Set Player
 	glm::vec3 PlayerT = glm::normalize(playerP - pNext);
 	m_pPlayer->Set(pNext, PlayerT, upNext);
-	//m_pPlayer->Update(m_dt);
+	m_pPlayer->Update(m_dt);
 
 	//Update game variables
 	m_t += (float)(0.01f * m_dt);

@@ -72,7 +72,9 @@ uniform samplerCube CubeMapTex;
 uniform bool bUseTexture;    // A flag indicating if texture-mapping should be applied
 uniform bool bUseTransparency; //A flag indicating if transparent texture mapping should be applied
 uniform bool renderSkybox;
+uniform float vTransparency;
 in vec3 worldPosition;
+
 
 
 void main()
@@ -93,7 +95,7 @@ void main()
 		if (bUseTexture)
 			vOutputColour = vTexColour*vec4(vColour, 1.0f);	// Combine object colour and texture 
 		else if (bUseTransparency)
-			vOutputColour = vTexColour*vec4(vColour, 0.5f);	// Combine object colour and texture 
+			vOutputColour = vTexColour*vec4(vColour, 0.5f + vTransparency);	// Combine object colour and texture 
 		else
 			vOutputColour = vec4(vColour, 1.0f);	// Just use the colour instead
 	}
