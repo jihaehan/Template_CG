@@ -14,9 +14,9 @@ CSkybox::~CSkybox()
 void CSkybox::Create(float size)
 {
 
-	m_cubemapTexture.Create("resources\\skyboxes\\jihae\\blue_rt.png", "resources\\skyboxes\\jihae\\blue_lt.png",
-		"resources\\skyboxes\\jihae\\blue_up.png", "resources\\skyboxes\\jihae\\blue_dn.png",
-		"resources\\skyboxes\\jihae\\blue_bk.png", "resources\\skyboxes\\jihae\\blue_ft.png");
+	m_cubemapTexture.Create("resources\\skyboxes\\jihae1\\blue_rt.png", "resources\\skyboxes\\jihae1\\blue_lt.png",
+		"resources\\skyboxes\\jihae1\\blue_up.png", "resources\\skyboxes\\jihae1\\blue_dn.png",
+		"resources\\skyboxes\\jihae1\\blue_bk.png", "resources\\skyboxes\\jihae1\\blue_ft.png");
 
 	
 	

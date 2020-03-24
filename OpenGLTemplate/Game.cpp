@@ -255,7 +255,7 @@ void Game::Initialise()
 	glEnable(GL_CULL_FACE);
 		
 	// Create a heightmap terrain
-	m_pHeightmapTerrain->Create("resources\\textures\\heightmap_s.png", "resources\\textures\\vangogh_sower.png", glm::vec3(0, 0, 0), 900.0f, 900.0f, 150.f);
+	m_pHeightmapTerrain->Create("resources\\textures\\heightmap_s.png", "resources\\textures\\vangogh_sower6.png", glm::vec3(0, 0, 0), 900.0f, 900.0f, 150.f);
 
 	//============================ CATMULL ====================================//
 	m_pCatmullRom->CreateCentreline();
@@ -326,6 +326,7 @@ void Game::RenderScene(int pass)
 	CShaderProgram* pMainProgram = (*m_pShaderPrograms)[0];
 	pMainProgram->UseProgram();
 	pMainProgram->SetUniform("bUseTexture", true);
+	pMainProgram->SetUniform("bUseTransparency", false);
 	pMainProgram->SetUniform("sampler0", 0);
 	// Note: cubemap and non-cubemap textures should not be mixed in the same texture unit.  Setting unit 10 to be a cubemap texture.
 	int cubeMapTextureUnit = 10;
@@ -395,11 +396,13 @@ void Game::RenderScene(int pass)
 	pMainProgram->SetUniform("renderSkybox", false);
 	modelViewMatrixStack.Pop();
 
+	
 	// Render the heightmap terrain
 	modelViewMatrixStack.Push();
 	modelViewMatrixStack.Translate(glm::vec3(-140.f, 40.f, 0.f));
 	modelViewMatrixStack.RotateRadians({ 0.f, 1.f, 0.f }, (float)M_PI);
 	modelViewMatrixStack.Scale({ 1.f });
+	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.8f * m_lightswitch));	// Ambient material reflectance
 	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 	m_pHeightmapTerrain->Render();
@@ -460,15 +463,6 @@ void Game::RenderScene(int pass)
 	modelViewMatrixStack.Pop();
 	glEnable(GL_CULL_FACE);
 
-	// Render the saturn ring
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(-100.0f, 10.0f, 0.0f));
-	modelViewMatrixStack.Scale(5.0f);
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pSaturnRingMesh->Render();
-	modelViewMatrixStack.Pop();
-
 	// Render the cow 
 	modelViewMatrixStack.Push();
 	modelViewMatrixStack.Translate(glm::vec3(-150.0f, 1.0f, 0.0f));
@@ -509,10 +503,10 @@ void Game::RenderScene(int pass)
 
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.2f + 0.7f * m_lightswitch));	
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(5.0f));	
-	pMainProgram->SetUniform("material1.shininess", 50.0f);		
+	pMainProgram->SetUniform("material1.shininess", 50.0f);	
 
 	// Render the pavilion 
-	for (GLint i = 0; i < 5; i++) {
+	for (int i = 0; i < 5; i++) {
 		modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(m_pCatmullRom->GetCentrelinePoints()[i * 25 + 100] + m_pCatmullRom->GetOffsetPoints()[i * 25 + 100] * 40.f);
 		modelViewMatrixStack.RotateQuat(glm::toMat4(Game::LookAt(m_pCatmullRom->GetOffsetPoints()[i * 25 + 100], m_pCatmullRom->GetUpPoints()[i * 25 + 100])));
@@ -522,10 +516,27 @@ void Game::RenderScene(int pass)
 		m_pPavilionMesh->Render();
 		modelViewMatrixStack.Pop();
 	}
-	// Render Track 
-	modelViewMatrixStack.Push(); {
+
+	// Render the saturn ring
+	for (int i = 0; i < 7; i++)
+	{
+		modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(m_pCatmullRom->GetCentrelinePoints()[i*15]);
+		modelViewMatrixStack.RotateQuat(glm::toMat4(Game::LookAt(m_pCatmullRom->GetUpPoints()[i * 15 + 1], normalize(m_pCatmullRom->GetCentrelinePoints()[i * 15 + 1]-m_pCatmullRom->GetCentrelinePoints()[i*15]))));
+		modelViewMatrixStack.Scale(20.0f);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pSaturnRingMesh->Render();
+		modelViewMatrixStack.Pop();
+	}
+
+	// Render Track 
+	modelViewMatrixStack.Push(); {
+		pMainProgram->SetUniform("material1.shininess", 50.0f);
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		pMainProgram->SetUniform("bUseTexture", 1 - m_lightswitch); //ensures that textures are off for sphere shader
+		pMainProgram->SetUniform("bUseTransparency", m_lightswitch); //ensures that textures are off for sphere shader
 		m_pCatmullRom->RenderTrack();
 	} modelViewMatrixStack.Pop();
 
@@ -569,7 +580,7 @@ void Game::RenderScene(int pass)
 void Game::Update() 
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	//m_pCamera->Update(m_dt); 
+	m_pCamera->Update(m_dt); 
 
 	//m_pAudio->Update();
 
@@ -584,12 +595,12 @@ void Game::Update()
 	glm::vec3 T = glm::normalize(pNext - p);
 	glm::vec3 P = p + up*10.f;
 	glm::vec3 viewpt = P + 10.0f * T; 
-	m_pCamera->Set(P, viewpt, upNextNext);
+	//m_pCamera->Set(P, viewpt, upNextNext);
 
 	//Set Player
 	glm::vec3 PlayerT = glm::normalize(playerP - pNext);
 	m_pPlayer->Set(pNext, PlayerT, upNext);
-	m_pPlayer->Update(m_dt);
+	//m_pPlayer->Update(m_dt);
 
 	//Update game variables
 	m_t += (float)(0.01f * m_dt);
@@ -620,6 +631,7 @@ void Game::DisplayFrameRate()
 	fontProgram->SetUniform("matrices.modelViewMatrix", glm::mat4(1));
 	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
 	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+	fontProgram->SetUniform("t", (float)m_t/3);
 	m_pFtFont->Render(20, height - 40, 20, "Score: %d", m_score);
 
 	// Increase the elapsed time and frame counter
