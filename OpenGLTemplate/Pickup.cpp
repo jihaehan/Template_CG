@@ -12,6 +12,11 @@ void CPickup::Initialise(CSphere* &object)
 	m_is_active = true;
 }
 
+void CPickup::SetPosition(glm::vec3& pickup_pos)
+{
+	m_position = pickup_pos;
+}
+
 void CPickup::Render(glutil::MatrixStack matrixStack, CShaderProgram* shaderProgram, CCamera* camera)
 {
 	if (m_is_active == true) {

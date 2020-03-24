@@ -71,6 +71,7 @@ private:
 	bool m_TVActive;
 	float m_close;
 	float m_lightup;
+	GLint m_random;
 
 public:
 	Game();

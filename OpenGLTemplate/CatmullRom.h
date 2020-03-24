@@ -24,6 +24,9 @@ public:
 
 	bool Sample(float d, glm::vec3 &p, glm::vec3 &up); // Return a point on the centreline based on a certain distance along the control curve.
 
+	void ComputeTrackPoints();
+	vector<glm::vec3> GetTrackPoints() const { return m_trackPoints; };
+
 private:
 
 	void SetControlPoints();
@@ -51,6 +54,7 @@ private:
 	vector<glm::vec3> m_centrelineUpVectors;// Centreline upvectors
 	vector<glm::vec3> m_leftOffsetPoints;	// Left offset curve points
 	vector<glm::vec3> m_rightOffsetPoints;	// Right offset curve points
+	vector<glm::vec3> m_trackPoints;		// Compute available positions on track
 
 	unsigned int m_vertexCount;				// Number of vertices in the track VBO
 	unsigned int m_numTriangles;

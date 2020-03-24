@@ -252,14 +252,21 @@ void Game::Initialise()
 	// Create a heightmap terrain
 	m_pHeightmapTerrain->Create("resources\\textures\\heightmap_s.png", "resources\\textures\\vangogh_sower.png", glm::vec3(0, 0, 0), 900.0f, 900.0f, 150.f);
 
+	//============================ CATMULL ====================================//
+	m_pCatmullRom->CreateCentreline();
+	m_pCatmullRom->CreateOffsetCurves();
+	m_pCatmullRom->CreateTrack("resources\\textures\\", "dirtpile01.jpg");
+	m_pCatmullRom->ComputeTrackPoints();
+
+	//============================ Player and Pickups =========================//
+
 	// Initialise Player 
 	m_pPlayer->Initialise(m_pBikeMesh);
 
 	// Initialise Pickup
 	m_pPickup->Initialise(m_pSphere);
-
-	// Initialize TV
-	m_pTV->Create("resources\\textures\\", "grassfloor01.jpg", 40.0f, 30.0f, 1.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	srand(time(NULL)); m_random = rand() % 400; //initialize random pickup value
+	m_pPickup->SetPosition(m_pCatmullRom->GetTrackPoints()[m_random]);
 
 	//============================ AUDIO ======================================//
 	// Initialise audio and play background music
@@ -269,10 +276,10 @@ void Game::Initialise()
 	m_pAudio->LoadMusicStream("resources\\Audio\\DST-Canopy.mp3");	// Royalty free music from http://www.nosoapradio.us/
 	m_pAudio->PlayMusicStream();
 	*/
-	//============================ CATMULL ====================================//
-	m_pCatmullRom->CreateCentreline();
-	m_pCatmullRom->CreateOffsetCurves();
-	m_pCatmullRom->CreateTrack("resources\\textures\\", "dirtpile01.jpg");
+
+	//============================ FBO ========================================//
+	// Initialize TV
+	m_pTV->Create("resources\\textures\\", "grassfloor01.jpg", 40.0f, 30.0f, 1.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 
 	m_pFBO->Create(width, height);
 }
@@ -616,7 +623,8 @@ void Game::DisplayFrameRate()
 	fontProgram->SetUniform("matrices.modelViewMatrix", glm::mat4(1));
 	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
 	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-	m_pFtFont->Render(20, height - 50, 20, "Score: %d", m_score);
+	m_pFtFont->Render(20, height - 40, 20, "Score: %d", m_score);
+	m_pFtFont->Render(20, height - 60, 20, "Random: %d", m_random);
 
 	// Increase the elapsed time and frame counter
 	m_elapsedTime += m_dt;

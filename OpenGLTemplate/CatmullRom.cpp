@@ -380,3 +380,11 @@ int CCatmullRom::CurrentLap(float d)
 	return (int)(d / m_distances.back());
 
 }
+
+void CCatmullRom::ComputeTrackPoints() 
+{
+	for (int i = 0; i < m_centrelinePoints.size(); i++)
+	{
+		m_trackPoints.push_back(m_centrelinePoints[i] + 3.f* glm::normalize(m_centrelineUpVectors[i]));
+	}
+}
