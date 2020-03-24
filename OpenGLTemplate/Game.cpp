@@ -271,7 +271,10 @@ void Game::Initialise()
 	// Initialise Vector of Pickup
 	srand(time(NULL)); m_random = rand() % 400; //initialize random pickup value
 	for (int i = 0; i < m_pickup_num; i++) {
-		m_pPickups->push_back(new CPickup(m_pSphere, m_pCatmullRom->GetTrackPoints()[rand() % 400]));
+		int random = rand() % 400;
+		glm::vec3 pickup_pos = m_pCatmullRom->GetTrackPoints()[random]
+			+ (m_pCatmullRom->GetOffsetPoints()[random])*(float)(rand()%20);
+		m_pPickups->push_back(new CPickup(m_pSphere, pickup_pos));
 	}
 
 	//============================ AUDIO ======================================//
@@ -607,15 +610,13 @@ void Game::Update()
 	//Update game variables
 	m_t += (float)(0.01f * m_dt);
 	m_currentDistance += (float)(m_cameraSpeed * m_dt);
-	if (m_close <= 70.0f) m_lightup = 1. - m_close / 70.f;
 
 	//Update pickups
 	for (int i = 0; i < m_pickup_num; i++) {
 		m_close = distance(m_pPlayer->GetPosition(), (*m_pPickups)[i]->GetPosition());
 		(*m_pPickups)[i]->Update(m_dt, m_pPlayer->GetPosition(), m_score);
+		if (m_close <= 70.0f) m_lightup = 1. - m_close / 70.f;
 	}
-	//m_close = distance(m_pPlayer->GetPosition(), m_pPickup->GetPosition());
-	//m_pPickup->Update(m_dt, m_pPlayer->GetPosition(), m_score);
 
 	//Number of Laps
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 

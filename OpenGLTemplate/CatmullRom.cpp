@@ -385,6 +385,9 @@ void CCatmullRom::ComputeTrackPoints()
 {
 	for (int i = 0; i < m_centrelinePoints.size(); i++)
 	{
-		m_trackPoints.push_back(m_centrelinePoints[i] + 3.f* glm::normalize(m_centrelineUpVectors[i]));
+		m_offsetPoints.push_back(normalize(m_rightOffsetPoints[i] - m_centrelinePoints[i]));
+		m_trackPoints.push_back(m_leftOffsetPoints[i] + 3.f* glm::normalize(m_centrelineUpVectors[i])
+			+ normalize(m_offsetPoints[i]));
 	}
 }
+

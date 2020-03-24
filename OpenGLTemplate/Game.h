@@ -71,7 +71,7 @@ private:
 	bool m_TVActive;
 	float m_close;
 	float m_lightup;
-	int m_pickup_num = 3;
+	int m_pickup_num = 30;
 	GLint m_random;
 
 

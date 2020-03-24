@@ -26,6 +26,7 @@ public:
 
 	void ComputeTrackPoints();
 	vector<glm::vec3> GetTrackPoints() const { return m_trackPoints; };
+	vector<glm::vec3> GetOffsetPoints() const { return m_offsetPoints; };
 
 private:
 
@@ -55,6 +56,7 @@ private:
 	vector<glm::vec3> m_leftOffsetPoints;	// Left offset curve points
 	vector<glm::vec3> m_rightOffsetPoints;	// Right offset curve points
 	vector<glm::vec3> m_trackPoints;		// Compute available positions on track
+	vector<glm::vec3> m_offsetPoints;		// Computer strafe points for positions on track
 
 	unsigned int m_vertexCount;				// Number of vertices in the track VBO
 	unsigned int m_numTriangles;
