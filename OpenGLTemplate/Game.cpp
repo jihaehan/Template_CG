@@ -269,11 +269,10 @@ void Game::Initialise()
 	m_pPlayer->Initialise(m_pBikeMesh);
 
 	// Initialise Vector of Pickup
-	srand(time(NULL)); m_random = rand() % 400; //initialize random pickup value
+	srand(time(NULL)); //initialize random value
 	for (int i = 0; i < m_pickup_num; i++) {
 		int random = rand() % 400;
-		glm::vec3 pickup_pos = m_pCatmullRom->GetTrackPoints()[random]
-			+ (m_pCatmullRom->GetOffsetPoints()[random])*(float)(rand()%20);
+		glm::vec3 pickup_pos = m_pCatmullRom->GetTrackPoints()[random] + (m_pCatmullRom->GetOffsetPoints()[random])*(float)(rand()%20);
 		m_pPickups->push_back(new CPickup(m_pSphere, pickup_pos));
 	}
 
@@ -461,15 +460,6 @@ void Game::RenderScene(int pass)
 	modelViewMatrixStack.Pop();
 	glEnable(GL_CULL_FACE);
 
-	// Render the pavilion 
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(-50.0f, 0.0f, 0.0f));
-	modelViewMatrixStack.Scale(5.0f);
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pPavilionMesh->Render();
-	modelViewMatrixStack.Pop();
-
 	// Render the saturn ring
 	modelViewMatrixStack.Push();
 	modelViewMatrixStack.Translate(glm::vec3(-100.0f, 10.0f, 0.0f));
@@ -517,27 +507,21 @@ void Game::RenderScene(int pass)
 	// Render the player
 	m_pPlayer->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
 
-	pMainProgram->SetUniform("material1.Ms", glm::vec3(5.0f));	// Specular material reflectance
-	pMainProgram->SetUniform("material1.shininess", 50.0f);		// Shininess material property
+	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.2f + 0.7f * m_lightswitch));	
+	pMainProgram->SetUniform("material1.Ms", glm::vec3(5.0f));	
+	pMainProgram->SetUniform("material1.shininess", 50.0f);		
 
-	// Render Camera Path
-	/*
-	modelViewMatrixStack.Push(); {
+	// Render the pavilion 
+	for (GLint i = 0; i < 5; i++) {
+		modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(m_pCatmullRom->GetCentrelinePoints()[i * 25 + 100] + m_pCatmullRom->GetOffsetPoints()[i * 25 + 100] * 40.f);
+		modelViewMatrixStack.RotateQuat(glm::toMat4(Game::LookAt(m_pCatmullRom->GetOffsetPoints()[i * 25 + 100], m_pCatmullRom->GetUpPoints()[i * 25 + 100])));
+		modelViewMatrixStack.Scale(6.2f);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix",
-			m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pCatmullRom->RenderCentreline();
-	} modelViewMatrixStack.Pop();
-	*/
-	// Render Offset curves
-	/*
-	modelViewMatrixStack.Push(); {
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix",
-			m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pCatmullRom->RenderOffsetCurves();
-	} modelViewMatrixStack.Pop();
-	*/
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pPavilionMesh->Render();
+		modelViewMatrixStack.Pop();
+	}
 	// Render Track 
 	modelViewMatrixStack.Push(); {
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
@@ -637,7 +621,6 @@ void Game::DisplayFrameRate()
 	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
 	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 	m_pFtFont->Render(20, height - 40, 20, "Score: %d", m_score);
-	m_pFtFont->Render(20, height - 60, 20, "Random: %d", m_random);
 
 	// Increase the elapsed time and frame counter
 	m_elapsedTime += m_dt;
@@ -821,4 +804,40 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE, PSTR, int)
 	return game.Execute();
 }
 
+// Implementation from Stan Melax's Game Programming Gems 1 article
+glm::quat Game::RotationBetweenVectors(glm::vec3 start, glm::vec3 dest) {
+	start = normalize(start);
+	dest = normalize(dest);
 
+	float cosTheta = dot(start, dest);
+	glm::vec3 rotationAxis;
+
+	rotationAxis = cross(start, dest);
+
+	float s = sqrt((1 + cosTheta) * 2);
+	float invs = 1 / s;
+
+	return glm::quat(
+		s * 0.5f,
+		rotationAxis.x * invs,
+		rotationAxis.y * invs,
+		rotationAxis.z * invs
+	);
+}
+
+glm::quat Game::LookAt(glm::vec3 direction, glm::vec3 desiredUp) {
+
+	if (length2(direction) < 0.0001f)
+		return glm::quat();
+
+	glm::vec3 right;
+	right = cross(direction, desiredUp);
+	desiredUp = cross(right, direction);
+
+	glm::quat rot1 = RotationBetweenVectors(glm::vec3(0.0f, 0.0f, 1.0f), direction);
+
+	glm::vec3 newUp = rot1 * glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::quat rot2 = RotationBetweenVectors(newUp, desiredUp);
+
+	return rot2 * rot1; 
+}

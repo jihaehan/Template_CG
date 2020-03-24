@@ -72,8 +72,6 @@ private:
 	float m_close;
 	float m_lightup;
 	int m_pickup_num = 30;
-	GLint m_random;
-
 
 public:
 	Game();
@@ -91,6 +89,9 @@ private:
 	HINSTANCE m_hInstance;
 	int m_frameCount;
 	double m_elapsedTime;
+
+	glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest);
+	glm::quat LookAt(glm::vec3 direction, glm::vec3 desiredUp);
 };
 
 

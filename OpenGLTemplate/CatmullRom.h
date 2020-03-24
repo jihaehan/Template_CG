@@ -27,6 +27,8 @@ public:
 	void ComputeTrackPoints();
 	vector<glm::vec3> GetTrackPoints() const { return m_trackPoints; };
 	vector<glm::vec3> GetOffsetPoints() const { return m_offsetPoints; };
+	vector<glm::vec3> GetCentrelinePoints() const { return m_centrelinePoints; };
+	vector<glm::vec3> GetUpPoints() const { return m_centrelineUpVectors; };
 
 private:
 
