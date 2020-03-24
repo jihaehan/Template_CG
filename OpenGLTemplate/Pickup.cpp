@@ -3,6 +3,12 @@
 CPickup::CPickup() : m_is_active(true)
 {}
 
+CPickup::CPickup(CSphere*& object, glm::vec3& pickup_pos) : m_is_active(true)
+{
+	m_pickup = object;
+	m_position = pickup_pos;
+}
+
 CPickup::~CPickup()
 {}
 

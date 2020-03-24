@@ -9,6 +9,7 @@ class CPickup
 {
 public: 
 	CPickup();
+	CPickup(CSphere*& object, glm::vec3& pickup_pos);
 	~CPickup();         
 	
 	void Initialise(CSphere* &object);

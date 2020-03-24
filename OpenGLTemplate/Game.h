@@ -54,7 +54,7 @@ private:
 	CAudio *m_pAudio;
 	CCatmullRom* m_pCatmullRom; 
 	CPlayer* m_pPlayer; 
-	CPickup* m_pPickup;
+	vector <CPickup*> *m_pPickups;
 	CFrameBufferObject* m_pFBO;
 	CPlane* m_pTV;
 
@@ -71,7 +71,9 @@ private:
 	bool m_TVActive;
 	float m_close;
 	float m_lightup;
+	int m_pickup_num = 3;
 	GLint m_random;
+
 
 public:
 	Game();

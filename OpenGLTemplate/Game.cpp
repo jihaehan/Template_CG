@@ -69,7 +69,7 @@ Game::Game()
 	m_pAudio = NULL;
 	m_pCatmullRom = NULL;
 	m_pPlayer = NULL; 
-	m_pPickup = NULL;
+	m_pPickups = NULL;
 	m_pFBO = NULL;
 	m_pTV = NULL;
 
@@ -111,7 +111,6 @@ Game::~Game()
 	delete m_pAudio;
 	delete m_pCatmullRom; 
 	delete m_pPlayer;
-	delete m_pPickup;
 	delete m_pFBO;
 	delete m_pTV;
 
@@ -121,6 +120,12 @@ Game::~Game()
 			delete (*m_pShaderPrograms)[i];
 	}
 	delete m_pShaderPrograms;
+
+	if (m_pPickups != NULL) {
+		for (unsigned int i = 0; i < m_pPickups->size(); i++)
+			delete (*m_pPickups)[i];
+	}
+	delete m_pPickups;
 
 	//setup objects
 	delete m_pHighResolutionTimer;
@@ -154,7 +159,7 @@ void Game::Initialise()
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
 	m_pPlayer = new CPlayer; 
-	m_pPickup = new CPickup;
+	m_pPickups = new vector <CPickup*>;
 	m_pFBO = new CFrameBufferObject;
 	m_pTV = new CPlane;
 
@@ -263,10 +268,11 @@ void Game::Initialise()
 	// Initialise Player 
 	m_pPlayer->Initialise(m_pBikeMesh);
 
-	// Initialise Pickup
-	m_pPickup->Initialise(m_pSphere);
+	// Initialise Vector of Pickup
 	srand(time(NULL)); m_random = rand() % 400; //initialize random pickup value
-	m_pPickup->SetPosition(m_pCatmullRom->GetTrackPoints()[m_random]);
+	for (int i = 0; i < m_pickup_num; i++) {
+		m_pPickups->push_back(new CPickup(m_pSphere, m_pCatmullRom->GetTrackPoints()[rand() % 400]));
+	}
 
 	//============================ AUDIO ======================================//
 	// Initialise audio and play background music
@@ -558,7 +564,9 @@ void Game::RenderScene(int pass)
 	pSphereProgram->SetUniform("levels", m_levels);
 
 	// Render the Pickup
-	m_pPickup->Render(modelViewMatrixStack, pSphereProgram, m_pCamera);
+	for (int i = 0; i < m_pickup_num; i++) {
+		(*m_pPickups)[i]->Render(modelViewMatrixStack, pSphereProgram, m_pCamera);
+	}
 
 	//============================ 2D SHADER ==========================================//
 	// Draw the 2D graphics after the 3D graphics
@@ -599,11 +607,15 @@ void Game::Update()
 	//Update game variables
 	m_t += (float)(0.01f * m_dt);
 	m_currentDistance += (float)(m_cameraSpeed * m_dt);
-	m_close = distance(m_pPlayer->GetPosition(), m_pPickup->GetPosition());
 	if (m_close <= 70.0f) m_lightup = 1. - m_close / 70.f;
 
 	//Update pickups
-	m_pPickup->Update(m_dt, m_pPlayer->GetPosition(), m_score);
+	for (int i = 0; i < m_pickup_num; i++) {
+		m_close = distance(m_pPlayer->GetPosition(), (*m_pPickups)[i]->GetPosition());
+		(*m_pPickups)[i]->Update(m_dt, m_pPlayer->GetPosition(), m_score);
+	}
+	//m_close = distance(m_pPlayer->GetPosition(), m_pPickup->GetPosition());
+	//m_pPickup->Update(m_dt, m_pPlayer->GetPosition(), m_score);
 
 	//Number of Laps
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 
