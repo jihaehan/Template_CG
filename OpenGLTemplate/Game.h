@@ -79,6 +79,7 @@ private:
 	int m_pickup_num;
 	int m_bomb_num;
 	int m_lives;
+	int m_cameraControl = 1;
 
 public:
 	Game();
@@ -97,6 +98,7 @@ private:
 	int m_frameCount;
 	double m_elapsedTime;
 
+	void CameraControl(glm::vec3& pos, glm::vec3 &player, glm::vec3& viewpt, glm::vec3& strafe, glm::vec3& up, glm::vec3& upnext);
 	glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest);
 	glm::quat LookAt(glm::vec3 direction, glm::vec3 desiredUp);
 };

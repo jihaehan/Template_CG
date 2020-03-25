@@ -301,12 +301,12 @@ void Game::Initialise()
 
 	//============================ AUDIO ======================================//
 	// Initialise audio and play background music
-	/*
+	
 	m_pAudio->Initialise();
 	m_pAudio->LoadEventSound("resources\\Audio\\Boing.wav");		// Royalty free sound from freesound.org
 	m_pAudio->LoadMusicStream("resources\\Audio\\DST-Canopy.mp3");	// Royalty free music from http://www.nosoapradio.us/
 	m_pAudio->PlayMusicStream();
-	*/
+	
 
 	//============================ FBO AND SCREENS =============================//
 
@@ -322,9 +322,6 @@ void Game::Render()
 	RenderScene(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	RenderScene(1);
-
-	// Draw the 2D graphics after the 3D graphics
-	DisplayHUD(1);
 
 	// Swap buffers to show the rendered image
 	SwapBuffers(m_gameWindow.Hdc());
@@ -539,7 +536,6 @@ void Game::RenderScene(int pass)
 		modelViewMatrixStack.Pop();
 	}
 
-	
 	// Render the Bomb  
 	for (int i = 0; i < m_bomb_num; i++) {
 		(*m_pBombs)[i]->Render(modelViewMatrixStack, pMainProgram, m_pCamera, m_t);
@@ -588,22 +584,18 @@ void Game::RenderScene(int pass)
 
 	//============================ 2D SHADER ==========================================//
 	// Draw the 2D graphics after the 3D graphics
-	//DisplayFrameRate();
+	DisplayHUD(pass);
 
 	//============================ SWAP BUFFERS	 ======================================//
 	// Swap buffers to show the rendered image
-	// Swap buffers to show the rendered image
-	//SwapBuffers(m_gameWindow.Hdc());
+	SwapBuffers(m_gameWindow.Hdc());
 }
 
 
 // Update method runs repeatedly with the Render method
 void Game::Update() 
 {
-	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	//m_pCamera->Update(m_dt); 
-
-	//m_pAudio->Update();
+	m_pAudio->Update();
 
 	//Set Catmull Spline
 	glm::vec3 p, up, pNext, pNextNext, upNext, upNextNext, playerUp, playerP;
@@ -616,12 +608,15 @@ void Game::Update()
 	glm::vec3 T = glm::normalize(pNext - p);
 	glm::vec3 P = p + up*10.f;
 	glm::vec3 viewpt = P + 10.0f * T; 
-	m_pCamera->Set(P, viewpt, upNextNext);
 
 	//Set Player
 	glm::vec3 PlayerT = glm::normalize(playerP - pNext);
+	glm::vec3 PlayerN = glm::normalize(cross(PlayerT, playerUp));
 	m_pPlayer->Set(pNext, PlayerT, upNext);
-	m_pPlayer->Update(m_dt);
+
+	//Set Camera Options
+	//m_pCamera->Update(m_dt); 
+	CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
 
 	//Update game variables
 	m_t += (float)(0.01f * m_dt);
@@ -646,9 +641,28 @@ void Game::Update()
 
 	//Number of Laps
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 
-
 }
 
+void Game::CameraControl(glm::vec3& pos, glm::vec3& player, glm::vec3& viewpt, glm::vec3& strafe, glm::vec3& up, glm::vec3& upnext)
+{	
+	m_pPlayer->Update(m_dt);	//player keys control
+	switch (m_cameraControl) {
+	case 1: { //third person camera
+		m_pCamera->Set(pos, viewpt, upnext);
+		break; }
+	case 2: { //side view camera 
+		glm::vec3 camera_side_pos = pos - strafe * 50.f + up * 10.f;
+		m_pCamera->Set(camera_side_pos, player, up);
+		break; }
+	case 3: { //top view camera
+		glm::vec3 camera_top_pos = pos + up * 50.f;
+		m_pCamera->Set(camera_top_pos, player, up);
+		break; }
+	default:
+		m_pCamera->Set(pos, viewpt, upnext);
+		break;
+	}
+}
 
 void Game::DisplayHUD(int pass)
 {
@@ -825,9 +839,6 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 		case '1':
 			m_pAudio->PlayEventSound();
 			break;
-		case VK_F1:
-			m_pAudio->PlayEventSound();
-			break;
 		case VK_TAB:
 			if (m_lightswitch == true)
 				m_lightswitch = 0;
@@ -837,6 +848,15 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 			if (m_TVActive == true)
 				m_TVActive = 0;
 			else m_TVActive = true;
+			break;
+		case VK_F1:
+			m_cameraControl = 1;
+			break;
+		case VK_F2:
+			m_cameraControl = 2;
+			break;
+		case VK_F3:
+			m_cameraControl = 3;
 			break;
 		case 189:
 			if (m_levels > 1) m_levels = m_levels - 1;
