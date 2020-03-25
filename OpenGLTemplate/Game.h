@@ -83,6 +83,7 @@ private:
 	int m_lives;
 	int m_cameraControl;
 	bool m_start;
+	int m_timerStart;
 
 public:
 	Game();

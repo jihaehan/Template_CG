@@ -94,10 +94,11 @@ Game::Game()
 	m_trap = 0;
 	m_lightup = 0;
 	m_pickup_num = 30;
-	m_bomb_num = 15;
+	m_bomb_num = 20;
 	m_lives = 3;
 	m_cameraControl = 1;
 	m_start = false;
+	m_timerStart = 4;
 }
 
 // Destructor
@@ -476,6 +477,7 @@ void Game::RenderScene(int pass)
 	glEnable(GL_CULL_FACE);
 
 	// Render the cow 
+	/*
 	modelViewMatrixStack.Push();
 	modelViewMatrixStack.Translate(glm::vec3(-150.0f, 1.0f, 0.0f));
 	modelViewMatrixStack.Scale(5.f);
@@ -483,6 +485,7 @@ void Game::RenderScene(int pass)
 	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 	m_pCowMesh->Render();
 	modelViewMatrixStack.Pop();
+	*/
 
 	// Render the tetrahedron
 	for (int i = 0; i < 20; i++) {
@@ -632,11 +635,12 @@ void Game::GameStart()
 	if (m_start == true) m_pPlayer->Set(pNext, PlayerT, upNext);
 
 	//Set Camera Options
-	//m_pCamera->Update(m_dt); 
-	CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
+	m_pCamera->Update(m_dt); 
+	//CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
+	//CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
 
 	//Update game variables
-	m_currentDistance += (float)(m_cameraSpeed * m_dt);
+	if (m_timerStart < 0) m_currentDistance += (float)(m_cameraSpeed * m_dt);
 
 	//Update pickups
 	for (int i = 0; i < m_pickup_num; i++) {
@@ -700,8 +704,13 @@ void Game::DisplayHUD(int pass)
 
 	//render in-game hud
 	if (m_start == true) { 
+
+		if (m_elapsedTime == 0)  m_timerStart -= 1;
+		if (m_timerStart >= 0) m_pFtFont->Render(width/2 - 2, height/2 - 10, 40, "%d", m_timerStart);
+
 		m_pFtFont->Render(20, height - 20, 20, "Score: %d", m_score);
 		m_pFtFont->Render(width * 5 / 6, height - 20, 20, "Health: %d", m_health);
+
 		fontProgram->SetUniform("bText", false);
 		fontProgram->SetUniform("bRGB", true);
 		for (int i = 0; i < m_lives; i++) {
@@ -748,14 +757,14 @@ void Game::DisplayHUD(int pass)
 		glEnable(GL_CULL_FACE);
 	}
 
-	/*
+	
 	// Increase the elapsed time and frame counter
 	m_elapsedTime += m_dt;
 	m_frameCount++;
 
 	// Now we want to subtract the current time by the last time that was stored
 	// to see if the time elapsed has been over a second, which means we found our FPS.
-	if (m_elapsedTime > 1000)
+	if (m_elapsedTime > 2000 && m_start == true)
     {
 		m_elapsedTime = 0;
 		m_framesPerSecond = m_frameCount;
@@ -765,10 +774,10 @@ void Game::DisplayHUD(int pass)
     }
 
 	if (m_framesPerSecond > 0) {
-		 Use the font shader program and render the text
-		m_pFtFont->Render(20, height - 40, 20, "FPS: %d", m_framesPerSecond);
+		// Use the font shader program and render the text
+		//m_pFtFont->Render(20, height - 40, 20, "FPS: %d", m_framesPerSecond);
 	}
-	*/
+	
 
 	if (pass == 1 && m_TVActive == true) {
 		// Render the plane for the TV
