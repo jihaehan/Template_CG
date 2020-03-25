@@ -12,6 +12,4 @@ C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Ga
 C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(677,65): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(677,48): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(925,21): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
-  Skybox.cpp
-  Generating Code...
   OpenGLTemplate.vcxproj -> C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\x64\Debug\OpenGLTemplate.exe

@@ -740,7 +740,7 @@ void Game::DisplayHUD(int pass)
 	
 	if (pass == 1 && m_TVActive == true) {
 		// Render the plane for the TV
-		// Back face actually places the horse the right way round
+		// TV effects allow 'Rainbow mode'
 		glDisable(GL_CULL_FACE);
 		screenViewMatrixStack.Push();
 		screenViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
