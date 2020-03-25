@@ -35,6 +35,7 @@ private:
 
 	// Pointers to game objects.  They will get allocated in Game::Initialise()
 	CSkybox *m_pSkybox;
+	CSkybox* m_pNightbox;
 	CCamera *m_pCamera;
 	vector <CShaderProgram *> *m_pShaderPrograms;
 	CFreeTypeFont *m_pFtFont;

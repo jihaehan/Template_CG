@@ -10,7 +10,7 @@ class CSkybox
 public:
 	CSkybox();
 	~CSkybox();
-	void Create(float size);
+	void Create(float size, bool day);
 	void Render(int textureUnit);
 	void Release();
 

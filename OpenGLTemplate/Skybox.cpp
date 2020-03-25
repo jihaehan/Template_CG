@@ -11,14 +11,20 @@ CSkybox::~CSkybox()
 
 
 // Create a skybox of a given size with six textures
-void CSkybox::Create(float size)
+void CSkybox::Create(float size, bool day)
 {
 
-	m_cubemapTexture.Create("resources\\skyboxes\\jihae1\\blue_rt.png", "resources\\skyboxes\\jihae1\\blue_lt.png",
-		"resources\\skyboxes\\jihae1\\blue_up.png", "resources\\skyboxes\\jihae1\\blue_dn.png",
-		"resources\\skyboxes\\jihae1\\blue_bk.png", "resources\\skyboxes\\jihae1\\blue_ft.png");
+	if (day) {
+		m_cubemapTexture.Create("resources\\skyboxes\\jihae1\\blue_rt.png", "resources\\skyboxes\\jihae1\\blue_lt.png",
+			"resources\\skyboxes\\jihae1\\blue_up.png", "resources\\skyboxes\\jihae1\\blue_dn.png",
+			"resources\\skyboxes\\jihae1\\blue_bk.png", "resources\\skyboxes\\jihae1\\blue_ft.png");
+	}
+	else {
+		m_cubemapTexture.Create("resources\\skyboxes\\jihae2\\blue_rt.png", "resources\\skyboxes\\jihae2\\blue_lt.png",
+			"resources\\skyboxes\\jihae2\\blue_up.png", "resources\\skyboxes\\jihae2\\blue_dn.png",
+			"resources\\skyboxes\\jihae2\\blue_bk.png", "resources\\skyboxes\\jihae2\\blue_ft.png");
+	}
 
-	
 	
 	glGenVertexArrays(1, &m_vao);
 	glBindVertexArray(m_vao);

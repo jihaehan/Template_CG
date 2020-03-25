@@ -50,6 +50,7 @@ Source code drawn from a number of sources and examples, including contributions
 Game::Game()
 {
 	m_pSkybox = NULL;
+	m_pNightbox = NULL;
 	m_pCamera = NULL;
 	m_pShaderPrograms = NULL;
 	m_pFtFont = NULL;
@@ -104,6 +105,7 @@ Game::~Game()
 	//game objects
 	delete m_pCamera;
 	delete m_pSkybox;
+	delete m_pNightbox;
 	delete m_pFtFont;
 	delete m_pTreeMesh;
 	delete m_pOakMesh;
@@ -155,6 +157,7 @@ void Game::Initialise()
 	/// Create objects
 	m_pCamera = new CCamera;
 	m_pSkybox = new CSkybox;
+	m_pNightbox = new CSkybox;
 	m_pShaderPrograms = new vector <CShaderProgram *>;
 	m_pFtFont = new CFreeTypeFont;
 	m_pTreeMesh = new COpenAssetImportMesh;
@@ -238,9 +241,9 @@ void Game::Initialise()
 	// You can follow this pattern to load additional shaders
 
 	//============================ OBJECTS, CREATE ======================================//
-	// Create the skybox
-	// Skybox downloaded from http://www.akimbo.in/forum/viewtopic.php?f=10&t=9
-	m_pSkybox->Create(2500.0f);
+	// Create the skybox and nightbox
+	m_pSkybox->Create(2500.0f, true);		//created by Jihae
+	m_pNightbox->Create(2500.0f, false);	//created by Jihae
 	
 	m_pFtFont->LoadSystemFont("OCRAEXT.ttf", 32);
 	m_pFtFont->SetShaderProgram(pFontProgram);
@@ -304,7 +307,7 @@ void Game::Initialise()
 
 	//============================ FBO AND SCREENS =============================//
 
-	m_pTV->Create("resources\\textures\\", "grassfloor01.jpg", 40.0f, 30.0f, 1.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	m_pTV->Create("resources\\textures\\", "grassfloor01.jpg", width, height, 1.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	m_pIntro->Create("resources\\textures\\", "intro.png", width, height, 1.0f);
 	m_pDeath->Create("resources\\textures\\", "death.png", width, height, 1.0f);
 	m_pHeart->Create("resources\\textures\\", "heart.png", 25.f, 25.f, 1.f);
@@ -400,15 +403,16 @@ void Game::RenderScene(int pass)
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance
 	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 
-	// Render the skybox and terrain with full ambient reflectance 
+	// Render the skybox/nightbox and terrain with full ambient reflectance 
 	modelViewMatrixStack.Push();
-	pMainProgram->SetUniform("renderSkybox", m_lightswitch);
+	pMainProgram->SetUniform("renderSkybox", true);
 	// Translate the modelview matrix to the camera eye point so skybox stays centred around camera
 	glm::vec3 vEye = m_pCamera->GetPosition();
 	modelViewMatrixStack.Translate(vEye);
 	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pSkybox->Render(cubeMapTextureUnit);
+	if (m_lightswitch) m_pSkybox->Render(cubeMapTextureUnit);
+	else m_pNightbox->Render(cubeMapTextureUnit);
 	pMainProgram->SetUniform("renderSkybox", false);
 	modelViewMatrixStack.Pop();
 
@@ -591,8 +595,8 @@ void Game::GameStart()
 	if (m_start == true) m_pPlayer->Set(pNext, PlayerT, upNext);
 
 	//Set Camera Options
-	m_pCamera->Update(m_dt); 
-	//CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
+	//m_pCamera->Update(m_dt); 
+	CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
 
 	//Update game variables
 	if (m_timerStart < 0) m_currentDistance += (float)(m_cameraSpeed * m_dt);
@@ -739,7 +743,7 @@ void Game::DisplayHUD(int pass)
 		// Back face actually places the horse the right way round
 		glDisable(GL_CULL_FACE);
 		screenViewMatrixStack.Push();
-		screenViewMatrixStack.Translate(glm::vec3(0.0f, 30.0f, 0.0f));
+		screenViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
 		screenViewMatrixStack.RotateRadians(glm::vec3(0.0f, 0.0f, 1.0f), (float)M_PI);
 		screenViewMatrixStack.Scale(-1.0);
 		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
