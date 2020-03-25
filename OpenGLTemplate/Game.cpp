@@ -74,6 +74,7 @@ Game::Game()
 	m_pBombs = NULL;
 	m_pFBO = NULL;
 	m_pTV = NULL;
+	m_pHeart = NULL;
 
 	m_dt = 0.0;
 	m_t = 0.0;
@@ -119,7 +120,7 @@ Game::~Game()
 	delete m_pPlayer;
 	delete m_pFBO;
 	delete m_pTV;
-
+	delete m_pHeart;
 
 	if (m_pShaderPrograms != NULL) {
 		for (unsigned int i = 0; i < m_pShaderPrograms->size(); i++)
@@ -175,6 +176,7 @@ void Game::Initialise()
 	m_pBombs = new vector <CBomb*>;
 	m_pFBO = new CFrameBufferObject;
 	m_pTV = new CPlane;
+	m_pHeart = new CPlane;
 
 	RECT dimensions = m_gameWindow.GetDimensions();
 
@@ -305,10 +307,10 @@ void Game::Initialise()
 	m_pAudio->PlayMusicStream();
 	*/
 
-	//============================ FBO ========================================//
-	// Initialize TV
-	m_pTV->Create("resources\\textures\\", "grassfloor01.jpg", 40.0f, 30.0f, 1.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	//============================ FBO AND SCREENS =============================//
 
+	m_pTV->Create("resources\\textures\\", "grassfloor01.jpg", 40.0f, 30.0f, 1.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	m_pHeart->Create("resources\\textures\\", "heart.png", 25.f, 25.f, 1.f);
 	m_pFBO->Create(width, height);
 }
 
@@ -675,19 +677,12 @@ void Game::DisplayHUD()
 	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
 	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 	fontProgram->SetUniform("t", (float)m_t/3);
+	fontProgram->SetUniform("bText", true);
+
 	m_pFtFont->Render(20, height - 20, 20, "Score: %d", m_score);
 	m_pFtFont->Render(width * 5 / 6, height - 20, 20, "Health: %d", m_health);
 
-	//render 2D images
 	/*
-	screenViewMatrixStack.Push(); {
-		screenViewMatrixStack.Translate(width / 2, height / 2, 0);
-		screenViewMatrixStack.RotateRadians(glm::vec3(0, 1, 0), (float)M_PI);
-		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
-		m_pTV->Render();
-	} screenViewMatrixStack.Pop();
-	*/
-
 	// Increase the elapsed time and frame counter
 	m_elapsedTime += m_dt;
 	m_frameCount++;
@@ -703,10 +698,31 @@ void Game::DisplayHUD()
 		m_frameCount = 0;
     }
 
-	//if (m_framesPerSecond > 0) {
-		// Use the font shader program and render the text
-		//m_pFtFont->Render(20, height - 40, 20, "FPS: %d", m_framesPerSecond);
-	//}
+	if (m_framesPerSecond > 0) {
+		 Use the font shader program and render the text
+		m_pFtFont->Render(20, height - 40, 20, "FPS: %d", m_framesPerSecond);
+	}
+	*/
+
+	//render 2D images
+	fontProgram->SetUniform("bText", false);
+	screenViewMatrixStack.Push(); {
+		screenViewMatrixStack.Translate(width - 20, height - 60, 0);
+		screenViewMatrixStack.RotateRadians(glm::vec3(0, 1, 0), (float)M_PI);
+		fontProgram->SetUniform("sampler0", 0);
+		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
+		m_pHeart->Render();
+	} screenViewMatrixStack.Pop();
+
+	/*
+	screenViewMatrixStack.Push(); {
+		screenViewMatrixStack.Translate(width / 2, height / 2, 0);
+		screenViewMatrixStack.RotateRadians(glm::vec3(0, 1, 0), (float)M_PI);
+		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
+		m_pTV->Render();
+	} screenViewMatrixStack.Pop();
+	*/
+
 }
 
 

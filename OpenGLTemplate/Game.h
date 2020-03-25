@@ -59,6 +59,7 @@ private:
 	vector <CBomb*>* m_pBombs;
 	CFrameBufferObject* m_pFBO;
 	CPlane* m_pTV;
+	CPlane* m_pHeart;
 
 	// Some other member variables
 	double m_dt;

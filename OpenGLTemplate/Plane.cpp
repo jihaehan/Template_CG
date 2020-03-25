@@ -97,10 +97,16 @@ void CPlane::Create(string directory, string filename, float width, float height
 // Render the plane as a triangle strip
 void CPlane::Render(bool bindTexture)
 {
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glBindVertexArray(m_vao);
 	if (bindTexture)
 		m_texture.Bind();
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	glDisable(GL_BLEND);
 
 }
 
