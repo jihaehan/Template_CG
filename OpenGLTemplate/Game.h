@@ -78,6 +78,7 @@ private:
 	float m_lightup;
 	int m_pickup_num;
 	int m_bomb_num;
+	int m_lives;
 
 public:
 	Game();
@@ -89,7 +90,7 @@ public:
 
 private:
 	static const int FPS = 60;
-	void DisplayHUD();
+	void DisplayHUD(int pass);
 	void GameLoop();
 	GameWindow m_gameWindow;
 	HINSTANCE m_hInstance;

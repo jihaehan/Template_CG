@@ -93,6 +93,7 @@ Game::Game()
 	m_lightup = 0;
 	m_pickup_num = 30;
 	m_bomb_num = 15;
+	m_lives = 3;
 }
 
 // Destructor
@@ -323,7 +324,7 @@ void Game::Render()
 	RenderScene(1);
 
 	// Draw the 2D graphics after the 3D graphics
-	DisplayHUD();
+	DisplayHUD(1);
 
 	// Swap buffers to show the rendered image
 	SwapBuffers(m_gameWindow.Hdc());
@@ -429,22 +430,6 @@ void Game::RenderScene(int pass)
 	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 	m_pHeightmapTerrain->Render();
 	modelViewMatrixStack.Pop();
-
-	if (pass == 1 && m_TVActive == true) {
-		// Render the plane for the TV
-		// Back face actually places the horse the right way round
-		glDisable(GL_CULL_FACE);
-		modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(0.0f, 30.0f, 0.0f));
-		modelViewMatrixStack.RotateRadians(glm::vec3(0.0f, 0.0f, 1.0f), (float)M_PI);
-		modelViewMatrixStack.Scale(-1.0);
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pFBO->BindTexture(0);
-		m_pTV->Render(false);
-		modelViewMatrixStack.Pop();
-		glEnable(GL_CULL_FACE);
-	}
 
 	// Turn on diffuse + specular materials 
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f * m_lightswitch));	// Ambient material reflectance
@@ -616,7 +601,7 @@ void Game::RenderScene(int pass)
 void Game::Update() 
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	m_pCamera->Update(m_dt); 
+	//m_pCamera->Update(m_dt); 
 
 	//m_pAudio->Update();
 
@@ -631,12 +616,12 @@ void Game::Update()
 	glm::vec3 T = glm::normalize(pNext - p);
 	glm::vec3 P = p + up*10.f;
 	glm::vec3 viewpt = P + 10.0f * T; 
-	//m_pCamera->Set(P, viewpt, upNextNext);
+	m_pCamera->Set(P, viewpt, upNextNext);
 
 	//Set Player
 	glm::vec3 PlayerT = glm::normalize(playerP - pNext);
 	m_pPlayer->Set(pNext, PlayerT, upNext);
-	//m_pPlayer->Update(m_dt);
+	m_pPlayer->Update(m_dt);
 
 	//Update game variables
 	m_t += (float)(0.01f * m_dt);
@@ -648,11 +633,15 @@ void Game::Update()
 		(*m_pPickups)[i]->Update(m_dt, m_pPlayer->GetPosition(), m_score);
 		if (m_close <= 70.0f) m_lightup = 1. - m_close / 70.f;
 	}
-	
 	//Update bombs
 	for (int i = 0; i < m_bomb_num; i++) {
 		m_trap = distance(m_pPlayer->GetPosition(), (*m_pBombs)[i]->GetPosition());
 		(*m_pBombs)[i]->Update(m_dt, m_pPlayer->GetPosition(), m_health);
+	}
+	//Update lives
+	if (m_health <= 0) {
+		m_lives -= 1;
+		m_health = 100;
 	}
 
 	//Number of Laps
@@ -661,7 +650,7 @@ void Game::Update()
 }
 
 
-void Game::DisplayHUD()
+void Game::DisplayHUD(int pass)
 {
 	glutil::MatrixStack screenViewMatrixStack;
 	screenViewMatrixStack.SetIdentity();
@@ -706,23 +695,31 @@ void Game::DisplayHUD()
 
 	//render 2D images
 	fontProgram->SetUniform("bText", false);
-	screenViewMatrixStack.Push(); {
-		screenViewMatrixStack.Translate(width - 20, height - 60, 0);
-		screenViewMatrixStack.RotateRadians(glm::vec3(0, 1, 0), (float)M_PI);
-		fontProgram->SetUniform("sampler0", 0);
-		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
-		m_pHeart->Render();
-	} screenViewMatrixStack.Pop();
+	for (int i = 0; i < m_lives; i++) {
+		screenViewMatrixStack.Push(); {
+			screenViewMatrixStack.Translate(width - 20 - 35 * i, height - 55, 0);
+			screenViewMatrixStack.RotateRadians(glm::vec3(0, 1, 0), (float)M_PI);
+			fontProgram->SetUniform("sampler0", 0);
+			fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
+			m_pHeart->Render();
+		} screenViewMatrixStack.Pop();
+	}
 
-	/*
-	screenViewMatrixStack.Push(); {
-		screenViewMatrixStack.Translate(width / 2, height / 2, 0);
-		screenViewMatrixStack.RotateRadians(glm::vec3(0, 1, 0), (float)M_PI);
+	if (pass == 1 && m_TVActive == true) {
+		// Render the plane for the TV
+		// Back face actually places the horse the right way round
+		glDisable(GL_CULL_FACE);
+		screenViewMatrixStack.Push();
+		screenViewMatrixStack.Translate(glm::vec3(0.0f, 30.0f, 0.0f));
+		screenViewMatrixStack.RotateRadians(glm::vec3(0.0f, 0.0f, 1.0f), (float)M_PI);
+		screenViewMatrixStack.Scale(-1.0);
 		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
-		m_pTV->Render();
-	} screenViewMatrixStack.Pop();
-	*/
-
+		fontProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(screenViewMatrixStack.Top()));
+		m_pFBO->BindTexture(0);
+		m_pTV->Render(false);
+		screenViewMatrixStack.Pop();
+		glEnable(GL_CULL_FACE);
+	}
 }
 
 
