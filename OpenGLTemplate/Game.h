@@ -60,6 +60,8 @@ private:
 	CFrameBufferObject* m_pFBO;
 	CPlane* m_pTV;
 	CPlane* m_pHeart;
+	CPlane* m_pIntro;
+	CPlane* m_pDeath;
 
 	// Some other member variables
 	double m_dt;
@@ -79,7 +81,8 @@ private:
 	int m_pickup_num;
 	int m_bomb_num;
 	int m_lives;
-	int m_cameraControl = 1;
+	int m_cameraControl;
+	bool m_start;
 
 public:
 	Game();
@@ -93,6 +96,7 @@ private:
 	static const int FPS = 60;
 	void DisplayHUD(int pass);
 	void GameLoop();
+	void GameStart();
 	GameWindow m_gameWindow;
 	HINSTANCE m_hInstance;
 	int m_frameCount;

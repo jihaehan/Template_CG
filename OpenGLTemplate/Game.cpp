@@ -74,6 +74,8 @@ Game::Game()
 	m_pBombs = NULL;
 	m_pFBO = NULL;
 	m_pTV = NULL;
+	m_pIntro = NULL;
+	m_pDeath = NULL;
 	m_pHeart = NULL;
 
 	m_dt = 0.0;
@@ -85,7 +87,7 @@ Game::Game()
 	m_currentDistance = 0.f;
 	m_cameraSpeed = 0.05f;
 	m_score = 0; 
-	m_health = 100;
+	m_health = 30;
 	m_lightswitch = true;
 	m_TVActive = false;
 	m_close = 0;
@@ -94,6 +96,8 @@ Game::Game()
 	m_pickup_num = 30;
 	m_bomb_num = 15;
 	m_lives = 3;
+	m_cameraControl = 1;
+	m_start = false;
 }
 
 // Destructor
@@ -121,6 +125,8 @@ Game::~Game()
 	delete m_pPlayer;
 	delete m_pFBO;
 	delete m_pTV;
+	delete m_pIntro;
+	delete m_pDeath;
 	delete m_pHeart;
 
 	if (m_pShaderPrograms != NULL) {
@@ -177,6 +183,8 @@ void Game::Initialise()
 	m_pBombs = new vector <CBomb*>;
 	m_pFBO = new CFrameBufferObject;
 	m_pTV = new CPlane;
+	m_pIntro = new CPlane;
+	m_pDeath = new CPlane;
 	m_pHeart = new CPlane;
 
 	RECT dimensions = m_gameWindow.GetDimensions();
@@ -311,6 +319,8 @@ void Game::Initialise()
 	//============================ FBO AND SCREENS =============================//
 
 	m_pTV->Create("resources\\textures\\", "grassfloor01.jpg", 40.0f, 30.0f, 1.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	m_pIntro->Create("resources\\textures\\", "intro.png", width, height, 1.0f);
+	m_pDeath->Create("resources\\textures\\", "death.png", width, height, 1.0f);
 	m_pHeart->Create("resources\\textures\\", "heart.png", 25.f, 25.f, 1.f);
 	m_pFBO->Create(width, height);
 }
@@ -325,7 +335,6 @@ void Game::Render()
 
 	// Swap buffers to show the rendered image
 	SwapBuffers(m_gameWindow.Hdc());
-	
 }
 
 void Game::RenderScene(int pass)
@@ -498,6 +507,7 @@ void Game::RenderScene(int pass)
 	}
 
 	// Render the horse
+	/*
 	modelViewMatrixStack.Push();
 	modelViewMatrixStack.Translate(glm::vec3(0, 5, 0));
 	modelViewMatrixStack.RotateRadians(glm::vec3(0.0f, 1.0f, 0.0f), (float)M_PI * 1.5);
@@ -506,6 +516,7 @@ void Game::RenderScene(int pass)
 	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 	m_pHorseMesh->Render();
 	modelViewMatrixStack.Pop();
+	*/
 
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.2f + 0.7f * m_lightswitch));	
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(5.0f));	
@@ -596,30 +607,35 @@ void Game::RenderScene(int pass)
 void Game::Update() 
 {
 	m_pAudio->Update();
+	m_t += (float)(0.01f * m_dt);
 
+	if (m_start == true) GameStart();
+
+}
+void Game::GameStart()
+{
 	//Set Catmull Spline
 	glm::vec3 p, up, pNext, pNextNext, upNext, upNextNext, playerUp, playerP;
-	m_pCatmullRom->Sample(m_currentDistance, p, up);	
+	m_pCatmullRom->Sample(m_currentDistance, p, up);
 	m_pCatmullRom->Sample(m_currentDistance + 25.0f, pNext, upNext);			//calculates T
 	m_pCatmullRom->Sample(m_currentDistance + 26.0f, playerP, playerUp);		//calculates player position
 	m_pCatmullRom->Sample(m_currentDistance + 50.0f, pNextNext, upNextNext);	//causes delay in camera rotation
 
 	//Set Camera
 	glm::vec3 T = glm::normalize(pNext - p);
-	glm::vec3 P = p + up*10.f;
-	glm::vec3 viewpt = P + 10.0f * T; 
+	glm::vec3 P = p + up * 10.f;
+	glm::vec3 viewpt = P + 10.0f * T;
 
 	//Set Player
 	glm::vec3 PlayerT = glm::normalize(playerP - pNext);
 	glm::vec3 PlayerN = glm::normalize(cross(PlayerT, playerUp));
-	m_pPlayer->Set(pNext, PlayerT, upNext);
+	if (m_start == true) m_pPlayer->Set(pNext, PlayerT, upNext);
 
 	//Set Camera Options
 	//m_pCamera->Update(m_dt); 
 	CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
 
 	//Update game variables
-	m_t += (float)(0.01f * m_dt);
 	m_currentDistance += (float)(m_cameraSpeed * m_dt);
 
 	//Update pickups
@@ -636,7 +652,7 @@ void Game::Update()
 	//Update lives
 	if (m_health <= 0) {
 		m_lives -= 1;
-		m_health = 100;
+		m_health = 30;
 	}
 
 	//Number of Laps
@@ -682,8 +698,55 @@ void Game::DisplayHUD(int pass)
 	fontProgram->SetUniform("t", (float)m_t/3);
 	fontProgram->SetUniform("bText", true);
 
-	m_pFtFont->Render(20, height - 20, 20, "Score: %d", m_score);
-	m_pFtFont->Render(width * 5 / 6, height - 20, 20, "Health: %d", m_health);
+	//render in-game hud
+	if (m_start == true) { 
+		m_pFtFont->Render(20, height - 20, 20, "Score: %d", m_score);
+		m_pFtFont->Render(width * 5 / 6, height - 20, 20, "Health: %d", m_health);
+		fontProgram->SetUniform("bText", false);
+		fontProgram->SetUniform("bRGB", true);
+		for (int i = 0; i < m_lives; i++) {
+			screenViewMatrixStack.Push(); {
+				screenViewMatrixStack.Translate(width - 20 - 35 * i, height - 55, 0);
+				screenViewMatrixStack.RotateRadians(glm::vec3(0, 1, 0), (float)M_PI);
+				fontProgram->SetUniform("sampler0", 0);
+				fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
+				m_pHeart->Render();
+			} screenViewMatrixStack.Pop();
+		}
+	}
+	//render intro screen
+	else  
+	{
+		glDisable(GL_CULL_FACE);
+		screenViewMatrixStack.Push();
+		screenViewMatrixStack.Translate(0.f, 0.f, 0.0f);
+		screenViewMatrixStack.RotateRadians(glm::vec3(0.0f, 0.0f, 1.0f), (float)M_PI);
+		screenViewMatrixStack.Scale(-1.0);
+		fontProgram->SetUniform("bText", false);
+		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
+		fontProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(screenViewMatrixStack.Top()));
+		m_pIntro->Render();
+		screenViewMatrixStack.Pop();
+		glEnable(GL_CULL_FACE);
+
+		fontProgram->SetUniform("bText", true);
+		m_pFtFont->Render(width * 5 / 8, height / 2 - 30, 32, "Road Runner");
+		m_pFtFont->Render(width * 2/3 + 18, height/2 - 70, 14, "SPACE TO PLAY");
+	}
+	//render death screen
+	if (m_lives == 0)
+	{
+		glDisable(GL_CULL_FACE);
+		screenViewMatrixStack.Push();
+		screenViewMatrixStack.Translate(0.f, 0.f, 0.0f);
+		screenViewMatrixStack.RotateRadians(glm::vec3(0.0f, 0.0f, 1.0f), (float)M_PI);
+		screenViewMatrixStack.Scale(-1.0);
+		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
+		fontProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(screenViewMatrixStack.Top()));
+		m_pDeath->Render();
+		screenViewMatrixStack.Pop();
+		glEnable(GL_CULL_FACE);
+	}
 
 	/*
 	// Increase the elapsed time and frame counter
@@ -706,18 +769,6 @@ void Game::DisplayHUD(int pass)
 		m_pFtFont->Render(20, height - 40, 20, "FPS: %d", m_framesPerSecond);
 	}
 	*/
-
-	//render 2D images
-	fontProgram->SetUniform("bText", false);
-	for (int i = 0; i < m_lives; i++) {
-		screenViewMatrixStack.Push(); {
-			screenViewMatrixStack.Translate(width - 20 - 35 * i, height - 55, 0);
-			screenViewMatrixStack.RotateRadians(glm::vec3(0, 1, 0), (float)M_PI);
-			fontProgram->SetUniform("sampler0", 0);
-			fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
-			m_pHeart->Render();
-		} screenViewMatrixStack.Pop();
-	}
 
 	if (pass == 1 && m_TVActive == true) {
 		// Render the plane for the TV
@@ -835,6 +886,9 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 		switch(w_param) {
 		case VK_ESCAPE:
 			PostQuitMessage(0);
+			break;
+		case VK_SPACE:
+			m_start = true;
 			break;
 		case '1':
 			m_pAudio->PlayEventSound();

@@ -7,6 +7,7 @@ uniform sampler2D sampler0;
 uniform vec4 vColour;
 uniform float t;
 uniform bool bText;
+uniform bool bRGB;
 
 void main()
 {
@@ -18,7 +19,7 @@ void main()
 		//vOutputColour = vec4(vTexColour.r) * vColour;			// The texel colour is a grayscale value -- apply to RGBA and combine with vColor
 		vOutputColour = vec4(vTexColour.r) * rgbColour;
 	}
-	else if (!bText) 
+	else if (bRGB) 
 	{
 		vOutputColour = vTexColour * rgbColour;
 	}
