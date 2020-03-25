@@ -75,8 +75,8 @@ private:
 	float m_close;
 	float m_trap;
 	float m_lightup;
-	int m_pickup_num = 30;
-	int m_bomb_num = 15;
+	int m_pickup_num;
+	int m_bomb_num;
 
 public:
 	Game();
@@ -88,7 +88,7 @@ public:
 
 private:
 	static const int FPS = 60;
-	void DisplayFrameRate();
+	void DisplayHUD();
 	void GameLoop();
 	GameWindow m_gameWindow;
 	HINSTANCE m_hInstance;

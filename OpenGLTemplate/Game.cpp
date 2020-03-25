@@ -90,6 +90,8 @@ Game::Game()
 	m_close = 0;
 	m_trap = 0;
 	m_lightup = 0;
+	m_pickup_num = 30;
+	m_bomb_num = 15;
 }
 
 // Destructor
@@ -319,7 +321,7 @@ void Game::Render()
 	RenderScene(1);
 
 	// Draw the 2D graphics after the 3D graphics
-	DisplayFrameRate();
+	DisplayHUD();
 
 	// Swap buffers to show the rendered image
 	SwapBuffers(m_gameWindow.Hdc());
@@ -432,7 +434,6 @@ void Game::RenderScene(int pass)
 		glDisable(GL_CULL_FACE);
 		modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(0.0f, 30.0f, 0.0f));
-		modelViewMatrixStack.RotateRadians(glm::vec3(1.0f, 0.0f, 0.0f), (float)M_PI/2);
 		modelViewMatrixStack.RotateRadians(glm::vec3(0.0f, 0.0f, 1.0f), (float)M_PI);
 		modelViewMatrixStack.Scale(-1.0);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
@@ -491,12 +492,26 @@ void Game::RenderScene(int pass)
 	modelViewMatrixStack.Pop();
 
 	// Render the tetrahedron
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(0.0f, 2.0f, 200.f));
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pTetrahedron->Render();
-	modelViewMatrixStack.Pop();
+	for (int i = 0; i < 20; i++) {
+		modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(-154.0f, 10.f + i * 20.f, -323.f));
+		modelViewMatrixStack.RotateRadians(glm::vec3(0.5f, 1.f, 0.5f), (float)M_PI/(3) * i);
+		modelViewMatrixStack.Scale(10.f);
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pTetrahedron->Render();
+		modelViewMatrixStack.Pop();
+	}
+	for (int i = 0; i < 25; i++) {
+		modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(-445.0f, 10.f + i * 10.f, -333.f));
+		modelViewMatrixStack.RotateRadians(glm::vec3(0.5f, 1.f, 0.5f), (float)M_PI / (4) * i);
+		modelViewMatrixStack.Scale(6.f);
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pTetrahedron->Render();
+		modelViewMatrixStack.Pop();
+	}
 
 	// Render the horse
 	modelViewMatrixStack.Push();
@@ -599,7 +614,7 @@ void Game::RenderScene(int pass)
 void Game::Update() 
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	//m_pCamera->Update(m_dt); 
+	m_pCamera->Update(m_dt); 
 
 	//m_pAudio->Update();
 
@@ -614,12 +629,12 @@ void Game::Update()
 	glm::vec3 T = glm::normalize(pNext - p);
 	glm::vec3 P = p + up*10.f;
 	glm::vec3 viewpt = P + 10.0f * T; 
-	m_pCamera->Set(P, viewpt, upNextNext);
+	//m_pCamera->Set(P, viewpt, upNextNext);
 
 	//Set Player
 	glm::vec3 PlayerT = glm::normalize(playerP - pNext);
 	m_pPlayer->Set(pNext, PlayerT, upNext);
-	m_pPlayer->Update(m_dt);
+	//m_pPlayer->Update(m_dt);
 
 	//Update game variables
 	m_t += (float)(0.01f * m_dt);
@@ -644,9 +659,11 @@ void Game::Update()
 }
 
 
-
-void Game::DisplayFrameRate()
+void Game::DisplayHUD()
 {
+	glutil::MatrixStack screenViewMatrixStack;
+	screenViewMatrixStack.SetIdentity();
+
 	CShaderProgram *fontProgram = (*m_pShaderPrograms)[1];
 	fontProgram->UseProgram();
 	glDisable(GL_DEPTH_TEST);
@@ -655,12 +672,21 @@ void Game::DisplayFrameRate()
 	int height = dimensions.bottom - dimensions.top;
 	int width = abs(dimensions.right - dimensions.left);
 
-	fontProgram->SetUniform("matrices.modelViewMatrix", glm::mat4(1));
 	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
 	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 	fontProgram->SetUniform("t", (float)m_t/3);
-	m_pFtFont->Render(20, height - 40, 20, "Score: %d", m_score);
+	m_pFtFont->Render(20, height - 20, 20, "Score: %d", m_score);
 	m_pFtFont->Render(width * 5 / 6, height - 20, 20, "Health: %d", m_health);
+
+	//render 2D images
+	/*
+	screenViewMatrixStack.Push(); {
+		screenViewMatrixStack.Translate(width / 2, height / 2, 0);
+		screenViewMatrixStack.RotateRadians(glm::vec3(0, 1, 0), (float)M_PI);
+		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
+		m_pTV->Render();
+	} screenViewMatrixStack.Pop();
+	*/
 
 	// Increase the elapsed time and frame counter
 	m_elapsedTime += m_dt;
@@ -677,11 +703,12 @@ void Game::DisplayFrameRate()
 		m_frameCount = 0;
     }
 
-	if (m_framesPerSecond > 0) {
+	//if (m_framesPerSecond > 0) {
 		// Use the font shader program and render the text
-		m_pFtFont->Render(20, height - 20, 20, "FPS: %d", m_framesPerSecond);
-	}
+		//m_pFtFont->Render(20, height - 40, 20, "FPS: %d", m_framesPerSecond);
+	//}
 }
+
 
 // The game loop runs repeatedly until game over
 void Game::GameLoop()

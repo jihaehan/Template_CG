@@ -44,10 +44,16 @@ void CPlane::Create(string directory, string filename, float width, float height
 	// Vertex positions
 	glm::vec3 planeVertices[4] =
 	{
-		glm::vec3(-halfWidth, 0.0f, -halfHeight),
-		glm::vec3(-halfWidth, 0.0f, halfHeight),
-		glm::vec3(halfWidth, 0.0f, -halfHeight),
-		glm::vec3(halfWidth, 0.0f, halfHeight),
+		/*
+		glm::vec3(-halfWidth, -halfHeight, 0.0f),
+		glm::vec3(-halfWidth, halfHeight, 0.0f ),
+		glm::vec3(halfWidth, -halfHeight, 0.0f ),
+		glm::vec3(halfWidth, halfHeight, 0.0f ),
+		*/
+		glm::vec3(0.f, 0.f, 0.0f),
+		glm::vec3(0.f, m_height, 0.0f),
+		glm::vec3(m_width, 0, 0.0f),
+		glm::vec3(m_width, m_height, 0.0f),
 	};
 
 	// Texture coordinates
