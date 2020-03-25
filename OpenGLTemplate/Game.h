@@ -80,6 +80,8 @@ private:
 	int m_cameraControl;
 	bool m_start;
 	int m_timerStart;
+	int width;  //screen width
+	int height; //screen height
 
 public:
 	Game();

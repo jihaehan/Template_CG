@@ -74,6 +74,7 @@ Game::Game()
 	m_pDeath = NULL;
 	m_pHeart = NULL;
 
+	// Initialize member variables
 	m_dt = 0.0;
 	m_t = 0.0;
 	m_framesPerSecond = 0;
@@ -178,8 +179,8 @@ void Game::Initialise()
 
 	RECT dimensions = m_gameWindow.GetDimensions();
 
-	int width = dimensions.right - dimensions.left;
-	int height = dimensions.bottom - dimensions.top;
+	width = dimensions.right - dimensions.left;
+	height = dimensions.bottom - dimensions.top;
 
 	// Set the orthographic and perspective projection matrices based on the image size
 	m_pCamera->SetOrthographicProjectionMatrix(width, height); 
@@ -190,12 +191,12 @@ void Game::Initialise()
 	// Load shaders
 	vector<CShader> shShaders;
 	vector<string> sShaderFileNames;
-	sShaderFileNames.push_back("mainShader.vert");
+	sShaderFileNames.push_back("mainShader.vert");	   //modified main shader to accomodate spotlights and etc.
 	sShaderFileNames.push_back("mainShader.frag");
-	sShaderFileNames.push_back("textShader.vert");
+	sShaderFileNames.push_back("textShader.vert");	   //modified text shader to allow other 2D rendering
 	sShaderFileNames.push_back("textShader.frag");
-	sShaderFileNames.push_back("sphereShaderEd.vert");
-	sShaderFileNames.push_back("sphereShaderEd.frag");
+	sShaderFileNames.push_back("sphereShaderEd.vert"); //modified version of Ed's toon shader
+	sShaderFileNames.push_back("sphereShaderEd.frag"); 
 
 	for (int i = 0; i < (int) sShaderFileNames.size(); i++) {
 		string sExt = sShaderFileNames[i].substr((int) sShaderFileNames[i].size()-4, 4);
@@ -226,13 +227,13 @@ void Game::Initialise()
 	pFontProgram->LinkProgram();
 	m_pShaderPrograms->push_back(pFontProgram);				//m_pShaderPrograms[1]
 
-	// Create the sphere shader program
-	CShaderProgram* pSphereProgram = new CShaderProgram;	
-	pSphereProgram->CreateProgram();
-	pSphereProgram->AddShaderToProgram(&shShaders[4]);
-	pSphereProgram->AddShaderToProgram(&shShaders[5]);
-	pSphereProgram->LinkProgram();
-	m_pShaderPrograms->push_back(pSphereProgram);			//m_pShaderPrograms[2]
+	// Create the toon shader program
+	CShaderProgram* pToonProgram = new CShaderProgram;
+	pToonProgram->CreateProgram();
+	pToonProgram->AddShaderToProgram(&shShaders[4]);
+	pToonProgram->AddShaderToProgram(&shShaders[5]);
+	pToonProgram->LinkProgram();
+	m_pShaderPrograms->push_back(pToonProgram);				//m_pShaderPrograms[2]
 
 	// You can follow this pattern to load additional shaders
 
@@ -525,27 +526,28 @@ void Game::RenderScene(int pass)
 
 	pMainProgram->SetUniform("bUseTexture", false); //ensures that textures are off for sphere shader
 	
-	//============================ SPHERE SHADER ======================================//
-	// Switch to the sphere program
-	CShaderProgram* pSphereProgram = (*m_pShaderPrograms)[2];
-	pSphereProgram->UseProgram();
+	//============================ TOON SHADER ======================================//
+	// Switch to the toon program
+	// This is a modified implementation fo the toon shader
+	CShaderProgram* pToonProgram = (*m_pShaderPrograms)[2];
+	pToonProgram->UseProgram();
 
 	// Set light and materials in sphere programme
-	pSphereProgram->SetUniform("material1.Ma", glm::vec3(m_lightup, 1.0f - m_lightup, m_lightup));
-	pSphereProgram->SetUniform("material1.Md", glm::vec3(m_lightup, 1.0f - m_lightup, m_lightup));
-	pSphereProgram->SetUniform("material1.Ms", glm::vec3(m_lightup, 1.0f - m_lightup, m_lightup));
-	pSphereProgram->SetUniform("material1.shininess", 50.0f);
-	pSphereProgram->SetUniform("light1.La", glm::vec3(0.15f, 0.15f, 0.15f));
-	pSphereProgram->SetUniform("light1.Ld", glm::vec3(1.0f, 1.0f, 1.0f));
-	pSphereProgram->SetUniform("light1.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
-	pSphereProgram->SetUniform("light1.position", viewMatrix * lightPosition1);
-	pSphereProgram->SetUniform("t", m_t);
-	pSphereProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
-	pSphereProgram->SetUniform("levels", m_levels);
+	pToonProgram->SetUniform("material1.Ma", glm::vec3(m_lightup, 1.0f - m_lightup, m_lightup));
+	pToonProgram->SetUniform("material1.Md", glm::vec3(m_lightup, 1.0f - m_lightup, m_lightup));
+	pToonProgram->SetUniform("material1.Ms", glm::vec3(m_lightup, 1.0f - m_lightup, m_lightup));
+	pToonProgram->SetUniform("material1.shininess", 50.0f);
+	pToonProgram->SetUniform("light1.La", glm::vec3(0.15f, 0.15f, 0.15f));
+	pToonProgram->SetUniform("light1.Ld", glm::vec3(1.0f, 1.0f, 1.0f));
+	pToonProgram->SetUniform("light1.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
+	pToonProgram->SetUniform("light1.position", viewMatrix * lightPosition1);
+	pToonProgram->SetUniform("t", m_t);
+	pToonProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
+	pToonProgram->SetUniform("levels", m_levels);
 
 	// Render the Pickup  
 	for (int i = 0; i < m_pickup_num; i++) {
-		(*m_pPickups)[i]->Render(modelViewMatrixStack, pSphereProgram, m_pCamera);
+		(*m_pPickups)[i]->Render(modelViewMatrixStack, pToonProgram, m_pCamera);
 	}
 
 	//============================ 2D SHADER ==========================================//
@@ -561,12 +563,14 @@ void Game::RenderScene(int pass)
 // Update method runs repeatedly with the Render method
 void Game::Update() 
 {
-	m_pAudio->Update();
-	m_t += (float)(0.01f * m_dt);
+	m_pAudio->Update();	//update audio
+	m_t += (float)(0.01f * m_dt); //update continuously increasing timer value
 
-	if (m_start == true) GameStart();
+	if (m_start == true) GameStart(); //allows the gameplay state to begin 
 
 }
+
+// Update method for gameplay state after passing intro screen
 void Game::GameStart()
 {
 	//Set Catmull Spline
@@ -637,17 +641,14 @@ void Game::CameraControl(glm::vec3& pos, glm::vec3& player, glm::vec3& viewpt, g
 
 void Game::DisplayHUD(int pass)
 {
+	//set up matrix stack for 2D graphics
 	glutil::MatrixStack screenViewMatrixStack;
 	screenViewMatrixStack.SetIdentity();
 
+	//pass font shader and define uniform values
 	CShaderProgram *fontProgram = (*m_pShaderPrograms)[1];
 	fontProgram->UseProgram();
 	glDisable(GL_DEPTH_TEST);
-
-	RECT dimensions = m_gameWindow.GetDimensions();
-	int height = dimensions.bottom - dimensions.top;
-	int width = abs(dimensions.right - dimensions.left);
-
 	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
 	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 	fontProgram->SetUniform("t", (float)m_t/3);
@@ -656,12 +657,15 @@ void Game::DisplayHUD(int pass)
 	//render in-game hud
 	if (m_start == true) { 
 
+		// render countdown before start
 		if (m_elapsedTime == 0)  m_timerStart -= 1;
 		if (m_timerStart >= 0) m_pFtFont->Render(width/2 - 2, height/2 - 10, 40, "%d", m_timerStart);
 
+		// render player stats
 		m_pFtFont->Render(20, height - 20, 20, "Score: %d", m_score);
 		m_pFtFont->Render(width * 5 / 6, height - 20, 20, "Health: %d", m_health);
 
+		// render number of lives (in the shape of hearts)
 		fontProgram->SetUniform("bText", false);
 		fontProgram->SetUniform("bRGB", true);
 		for (int i = 0; i < m_lives; i++) {
@@ -677,6 +681,7 @@ void Game::DisplayHUD(int pass)
 	//render intro screen
 	else  
 	{
+		//render intro screen background
 		glDisable(GL_CULL_FACE);
 		screenViewMatrixStack.Push();
 		screenViewMatrixStack.Translate(0.f, 0.f, 0.0f);
@@ -689,6 +694,7 @@ void Game::DisplayHUD(int pass)
 		screenViewMatrixStack.Pop();
 		glEnable(GL_CULL_FACE);
 
+		//turn on rainbow shader for title text
 		fontProgram->SetUniform("bText", true);
 		m_pFtFont->Render(width * 5 / 8, height / 2 - 30, 32, "Road Runner");
 		m_pFtFont->Render(width * 2/3 + 18, height/2 - 70, 14, "SPACE TO PLAY");
@@ -744,7 +750,6 @@ void Game::DisplayHUD(int pass)
 		glEnable(GL_CULL_FACE);
 	}
 }
-
 
 // The game loop runs repeatedly until game over
 void Game::GameLoop()
@@ -845,32 +850,32 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 		case VK_ESCAPE:
 			PostQuitMessage(0);
 			break;
-		case VK_SPACE:
+		case VK_SPACE: //starts gameplay state
 			m_start = true;
 			break;
-		case '1':
+		case '1': //plays event sound
 			m_pAudio->PlayEventSound();
 			break;
-		case VK_TAB:
+		case VK_TAB: //turns ON/OFF 'dark' mode
 			if (m_lightswitch == true)
 				m_lightswitch = 0;
 			else m_lightswitch = true;
 			break;
-		case 'M':
+		case 'M': //turns ON/OFF the TV
 			if (m_TVActive == true)
 				m_TVActive = 0;
 			else m_TVActive = true;
 			break;
-		case VK_F1:
+		case VK_F1: //switches to 3rd person camera
 			m_cameraControl = 1;
 			break;
-		case VK_F2:
+		case VK_F2: //switches to side view camera
 			m_cameraControl = 2;
 			break;
-		case VK_F3:
+		case VK_F3: //switches to top-down view camera
 			m_cameraControl = 3;
 			break;
-		case 189:
+		case 189: //cases for tooh shader
 			if (m_levels > 1) m_levels = m_levels - 1;
 			break;
 		case 187:
@@ -917,6 +922,7 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE, PSTR, int)
 }
 
 // Implementation from Stan Melax's Game Programming Gems 1 article
+// Helper function for quaternion rotations along the 3D spline (track)
 glm::quat Game::RotationBetweenVectors(glm::vec3 start, glm::vec3 dest) {
 	start = normalize(start);
 	dest = normalize(dest);
@@ -937,6 +943,9 @@ glm::quat Game::RotationBetweenVectors(glm::vec3 start, glm::vec3 dest) {
 	);
 }
 
+// Helper function for quaternion rotations along the 3D spline (track)
+// Ensures that the up direction of the objects points to the desired direction 
+// for rotation
 glm::quat Game::LookAt(glm::vec3 direction, glm::vec3 desiredUp) {
 
 	if (length2(direction) < 0.0001f)
