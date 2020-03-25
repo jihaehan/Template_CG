@@ -53,15 +53,11 @@ Game::Game()
 	m_pCamera = NULL;
 	m_pShaderPrograms = NULL;
 	m_pFtFont = NULL;
-	m_pBarrelMesh = NULL;
-	m_pHorseMesh = NULL;
 	m_pTreeMesh = NULL;
 	m_pOakMesh = NULL;
 	m_pPavilionMesh = NULL;
 	m_pSaturnRingMesh = NULL;
-	m_pCowMesh = NULL;
 	m_pBikeMesh = NULL;
-	m_pBirdMesh = NULL; 
 	m_pSphere = NULL;
 	m_pTetrahedron = NULL;
 	m_pUrchin = NULL;
@@ -108,15 +104,11 @@ Game::~Game()
 	delete m_pCamera;
 	delete m_pSkybox;
 	delete m_pFtFont;
-	delete m_pBarrelMesh;
-	delete m_pHorseMesh;
 	delete m_pTreeMesh;
 	delete m_pOakMesh;
 	delete m_pPavilionMesh;
 	delete m_pSaturnRingMesh;
-	delete m_pCowMesh;
 	delete m_pBikeMesh;
-	delete m_pBirdMesh; 
 	delete m_pSphere;
 	delete m_pTetrahedron;
 	delete m_pUrchin;
@@ -164,15 +156,11 @@ void Game::Initialise()
 	m_pSkybox = new CSkybox;
 	m_pShaderPrograms = new vector <CShaderProgram *>;
 	m_pFtFont = new CFreeTypeFont;
-	m_pBarrelMesh = new COpenAssetImportMesh;
-	m_pHorseMesh = new COpenAssetImportMesh;
 	m_pTreeMesh = new COpenAssetImportMesh;
 	m_pOakMesh = new COpenAssetImportMesh;
 	m_pPavilionMesh = new COpenAssetImportMesh;
 	m_pSaturnRingMesh = new COpenAssetImportMesh;
-	m_pCowMesh = new COpenAssetImportMesh;
 	m_pBikeMesh = new COpenAssetImportMesh;
-	m_pBirdMesh = new COpenAssetImportMesh; 
 	m_pSphere = new CSphere;
 	m_pTetrahedron = new CTetrahedron;
 	m_pUrchin = new CUrchin;
@@ -257,15 +245,11 @@ void Game::Initialise()
 	m_pFtFont->SetShaderProgram(pFontProgram);
 
 	// Load some meshes in OBJ/3ds format
-	m_pBarrelMesh->Load("resources\\models\\Barrel\\Barrel02.obj");  // Downloaded from http://www.psionicgames.com/?page_id=24 on 24 Jan 2013
-	m_pHorseMesh->Load("resources\\models\\Horse\\Horse2.obj");  // Downloaded from http://opengameart.org/content/horse-lowpoly on 24 Jan 2013
 	m_pTreeMesh->Load("resources\\models\\Tree\\tree_white.3ds");  // Downloaded from SketchUp Library on Nov 2019
 	m_pOakMesh->Load("resources\\models\\Tree\\quercus_A_packed_v1.obj");  
 	m_pPavilionMesh->Load("resources\\models\\Pavilion\\pavilion_textured.3ds");
 	m_pSaturnRingMesh->Load("resources\\models\\Saturn_Ring\\saturn_ring.3ds");
-	m_pCowMesh->Load("resources\\models\\Cow\\cow4.3ds");
 	m_pBikeMesh->Load("resources\\models\\Warbike\\bike.obj");
-	m_pBirdMesh->Load("resources\\models\\Bird\\wings.obj");
 
 	// Create a sphere
 	m_pSphere->Create("resources\\textures\\", "dirtpile01.jpg", 25, 25);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
@@ -443,15 +427,6 @@ void Game::RenderScene(int pass)
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
 
-	// Render the barrel 
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(100.0f, 0.0f, 0.0f));
-	modelViewMatrixStack.Scale(5.0f);
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pBarrelMesh->Render();
-	modelViewMatrixStack.Pop();
-
 	// Render the tree 
 	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f);
 	treePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition);
@@ -476,18 +451,7 @@ void Game::RenderScene(int pass)
 	modelViewMatrixStack.Pop();
 	glEnable(GL_CULL_FACE);
 
-	// Render the cow 
-	/*
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(-150.0f, 1.0f, 0.0f));
-	modelViewMatrixStack.Scale(5.f);
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pCowMesh->Render();
-	modelViewMatrixStack.Pop();
-	*/
-
-	// Render the tetrahedron
+	// Render the tetrahedron towers
 	for (int i = 0; i < 20; i++) {
 		modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(-154.0f, 10.f + i * 20.f, -323.f));
@@ -508,18 +472,6 @@ void Game::RenderScene(int pass)
 		m_pTetrahedron->Render();
 		modelViewMatrixStack.Pop();
 	}
-
-	// Render the horse
-	/*
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(0, 5, 0));
-	modelViewMatrixStack.RotateRadians(glm::vec3(0.0f, 1.0f, 0.0f), (float)M_PI * 1.5);
-	modelViewMatrixStack.Scale(2.5f);
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pHorseMesh->Render();
-	modelViewMatrixStack.Pop();
-	*/
 
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.2f + 0.7f * m_lightswitch));	
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(5.0f));	
@@ -637,7 +589,6 @@ void Game::GameStart()
 	//Set Camera Options
 	m_pCamera->Update(m_dt); 
 	//CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
-	//CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
 
 	//Update game variables
 	if (m_timerStart < 0) m_currentDistance += (float)(m_cameraSpeed * m_dt);
@@ -665,7 +616,7 @@ void Game::GameStart()
 
 void Game::CameraControl(glm::vec3& pos, glm::vec3& player, glm::vec3& viewpt, glm::vec3& strafe, glm::vec3& up, glm::vec3& upnext)
 {	
-	m_pPlayer->Update(m_dt);	//player keys control
+	m_pPlayer->Update(m_dt); //player keys control
 	switch (m_cameraControl) {
 	case 1: { //third person camera
 		m_pCamera->Set(pos, viewpt, upnext);
@@ -757,7 +708,6 @@ void Game::DisplayHUD(int pass)
 		glEnable(GL_CULL_FACE);
 	}
 
-	
 	// Increase the elapsed time and frame counter
 	m_elapsedTime += m_dt;
 	m_frameCount++;
@@ -778,7 +728,6 @@ void Game::DisplayHUD(int pass)
 		//m_pFtFont->Render(20, height - 40, 20, "FPS: %d", m_framesPerSecond);
 	}
 	
-
 	if (pass == 1 && m_TVActive == true) {
 		// Render the plane for the TV
 		// Back face actually places the horse the right way round

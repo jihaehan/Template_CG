@@ -38,15 +38,11 @@ private:
 	CCamera *m_pCamera;
 	vector <CShaderProgram *> *m_pShaderPrograms;
 	CFreeTypeFont *m_pFtFont;
-	COpenAssetImportMesh *m_pBarrelMesh;
-	COpenAssetImportMesh *m_pHorseMesh;
 	COpenAssetImportMesh* m_pTreeMesh;
 	COpenAssetImportMesh* m_pOakMesh; 
 	COpenAssetImportMesh* m_pPavilionMesh;
 	COpenAssetImportMesh* m_pSaturnRingMesh;
-	COpenAssetImportMesh* m_pCowMesh;
 	COpenAssetImportMesh* m_pBikeMesh; 
-	COpenAssetImportMesh* m_pBirdMesh; 
 	CSphere *m_pSphere;
 	CTetrahedron* m_pTetrahedron;
 	CUrchin* m_pUrchin;

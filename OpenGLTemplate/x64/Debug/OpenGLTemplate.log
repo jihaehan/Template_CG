@@ -1,13 +1,13 @@
 ﻿  Game.cpp
-C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(295,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(323,64): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(323,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(324,64): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(324,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(648,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(649,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(654,26): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(718,65): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(718,48): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(967,21): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(279,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(307,64): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(307,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(308,64): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(308,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(599,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(600,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(605,26): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(669,65): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(669,48): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(916,21): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
   OpenGLTemplate.vcxproj -> C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\x64\Debug\OpenGLTemplate.exe
