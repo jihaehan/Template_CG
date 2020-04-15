@@ -20,6 +20,13 @@ void CCamera::Set(glm::vec3 &position, glm::vec3 &viewpoint, glm::vec3 &upVector
 	m_upVector = upVector;
 }
 
+void CCamera::Reset(glm::vec3 position, glm::vec3 viewpoint, glm::vec3 upVector)
+{
+	m_position = position;
+	m_view = viewpoint;
+	m_upVector = upVector;
+}
+
 // Respond to mouse movement
 void CCamera::SetViewByMouse()
 {  

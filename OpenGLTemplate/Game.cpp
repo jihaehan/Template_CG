@@ -54,13 +54,14 @@ Game::Game()
 	m_pCamera = NULL;
 	m_pShaderPrograms = NULL;
 	m_pFtFont = NULL;
-	m_pTreeMesh = NULL;
 	m_pOakMesh = NULL;
 	m_pPavilionMesh = NULL;
 	m_pSaturnRingMesh = NULL;
 	m_pBikeMesh = NULL;
+	m_pBirdMesh = NULL;
 	m_pSphere = NULL;
 	m_pTetrahedron = NULL;
+	m_pTrackWall = NULL;
 	m_pUrchin = NULL;
 	m_pHeightmapTerrain = NULL;
 	m_pHighResolutionTimer = NULL;
@@ -74,6 +75,7 @@ Game::Game()
 	m_pIntro = NULL;
 	m_pDeath = NULL;
 	m_pHeart = NULL;
+	m_pFilter = NULL;
 
 	// Initialize member variables
 	m_dt = 0.0;
@@ -91,12 +93,14 @@ Game::Game()
 	m_close = 0;
 	m_trap = 0;
 	m_lightup = 0;
-	m_pickup_num = 30;
+	m_pickup_num = 40;
 	m_bomb_num = 20;
 	m_lives = 3;
 	m_cameraControl = 1;
+	m_freeview = false; 
 	m_start = false;
 	m_timerStart = 4;
+	m_switchColour = 0;
 }
 
 // Destructor
@@ -107,13 +111,14 @@ Game::~Game()
 	delete m_pSkybox;
 	delete m_pNightbox;
 	delete m_pFtFont;
-	delete m_pTreeMesh;
 	delete m_pOakMesh;
 	delete m_pPavilionMesh;
 	delete m_pSaturnRingMesh;
 	delete m_pBikeMesh;
+	delete m_pBirdMesh; 
 	delete m_pSphere;
 	delete m_pTetrahedron;
+	delete m_pTrackWall;
 	delete m_pUrchin;
 	delete m_pHeightmapTerrain;
 	delete m_pAudio;
@@ -124,6 +129,7 @@ Game::~Game()
 	delete m_pIntro;
 	delete m_pDeath;
 	delete m_pHeart;
+	delete m_pFilter;
 
 	if (m_pShaderPrograms != NULL) {
 		for (unsigned int i = 0; i < m_pShaderPrograms->size(); i++)
@@ -160,13 +166,14 @@ void Game::Initialise()
 	m_pNightbox = new CSkybox;
 	m_pShaderPrograms = new vector <CShaderProgram *>;
 	m_pFtFont = new CFreeTypeFont;
-	m_pTreeMesh = new COpenAssetImportMesh;
 	m_pOakMesh = new COpenAssetImportMesh;
 	m_pPavilionMesh = new COpenAssetImportMesh;
 	m_pSaturnRingMesh = new COpenAssetImportMesh;
 	m_pBikeMesh = new COpenAssetImportMesh;
+	m_pBirdMesh = new COpenAssetImportMesh;
 	m_pSphere = new CSphere;
 	m_pTetrahedron = new CTetrahedron;
+	m_pTrackWall = new CTetrahedron;
 	m_pUrchin = new CUrchin;
 	m_pHeightmapTerrain = new CHeightMapTerrain;
 	m_pAudio = new CAudio;
@@ -179,6 +186,7 @@ void Game::Initialise()
 	m_pIntro = new CPlane;
 	m_pDeath = new CPlane;
 	m_pHeart = new CPlane;
+	m_pFilter = new CPlane;
 
 	RECT dimensions = m_gameWindow.GetDimensions();
 
@@ -242,39 +250,66 @@ void Game::Initialise()
 
 	//============================ OBJECTS, CREATE ======================================//
 	// Create the skybox and nightbox
-	m_pSkybox->Create(2500.0f, true);		//created by Jihae
-	m_pNightbox->Create(2500.0f, false);	//created by Jihae
+	m_pSkybox->Create(2500.0f, true);		//created by Jihae Han
+	m_pNightbox->Create(2500.0f, false);	//created by Jihae Han
 	
 	m_pFtFont->LoadSystemFont("OCRAEXT.ttf", 32);
 	m_pFtFont->SetShaderProgram(pFontProgram);
 
 	// Load some meshes in OBJ/3ds format
-	m_pTreeMesh->Load("resources\\models\\Tree\\tree_white.3ds");  // Downloaded from SketchUp Library on Nov 2019
-	m_pOakMesh->Load("resources\\models\\Tree\\quercus_A_packed_v1.obj");  
-	m_pPavilionMesh->Load("resources\\models\\Pavilion\\pavilion_textured.3ds");
-	m_pSaturnRingMesh->Load("resources\\models\\Saturn_Ring\\saturn_ring.3ds");
-	m_pBikeMesh->Load("resources\\models\\Warbike\\bike.obj");
+	m_pOakMesh->Load("resources\\models\\Tree\\quercus_A_packed_v1.obj");	//https://opengameart.org/content/oak-tree downloaded on March 19
+	m_pPavilionMesh->Load("resources\\models\\Pavilion\\pavilion_textured.3ds"); //created by Jihae Han
+	m_pSaturnRingMesh->Load("resources\\models\\Saturn_Ring\\saturn_ring.3ds");	//created by Jihae Han
+	m_pBikeMesh->Load("resources\\models\\Warbike\\bike.obj");	//https://opengameart.org/content/harakiri-warbike-1000cc downloaded on March 21
+	m_pBirdMesh->Load("resources\\models\\Bird\\CARDNL_F.3ds"); //https://www.turbosquid.com/FullPreview/Index.cfm/ID/1100939 downloaded on April 3
 
 	// Create a sphere
 	m_pSphere->Create("resources\\textures\\", "dirtpile01.jpg", 25, 25);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
 
 	// Create a tetrahedron
-	m_pTetrahedron->Create("resources\\textures\\", "green_marble.png", 5);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	m_pTetrahedron->Create("resources\\textures\\", "green_marble.png", 5);  // Texture downloaded and modified from http://www.freepik.com on March 14 2020
+	glEnable(GL_CULL_FACE);
+	m_pTrackWall->Create("resources\\textures\\", "green_marble.png", 14);  //  Texture downloaded and modified from http://www.freepik.com on March 14 2020
 	glEnable(GL_CULL_FACE);
 
 	// Create an urchin
-	m_pUrchin->Create("resources\\textures\\", "dirtpile02.png", 4);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	m_pUrchin->Create("resources\\textures\\", "dirtpile02.png", 4);  // Texture modified from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
 		
 	// Create a heightmap terrain
-	m_pHeightmapTerrain->Create("resources\\textures\\heightmap_s.png", "resources\\textures\\vangogh_sower6.png", glm::vec3(0, 0, 0), 900.0f, 900.0f, 150.f);
+	m_pHeightmapTerrain->Create("resources\\textures\\heightmap_s.png", "resources\\textures\\vangogh_sower6.png", glm::vec3(0, 0, 0), 900.0f, 900.0f, 150.f); 
+		//texture modified from https://www.nytimes.com/2015/06/12/arts/design/review-van-gogh-and-nature-exploring-the-outside-world-in-high-relief.html
+		//and donwloaded on Feb 20
 
 	//============================ CATMULL ====================================//
 	m_pCatmullRom->CreateCentreline();
 	m_pCatmullRom->CreateOffsetCurves();
 	m_pCatmullRom->CreateTrack("resources\\textures\\", "dirtpile01.jpg");
 	m_pCatmullRom->ComputeTrackPoints();
+
+	//initialize offset track birds
+	for (int i = 0; i < 100; i++) {
+		int j = i * 4;
+		wall_lefttrack.push_back(m_pCatmullRom->GetLeftOffsetPoints()[j]); 
+		wall_lefttrackrot.push_back(glm::toMat4(Game::LookAt(m_pCatmullRom->GetUpPoints()[j], -m_pCatmullRom->GetOffsetPoints()[j])));
+		wall_righttrack.push_back(m_pCatmullRom->GetRightOffsetPoints()[j]);
+		wall_righttrackrot.push_back(glm::toMat4(Game::LookAt(m_pCatmullRom->GetUpPoints()[j], m_pCatmullRom->GetOffsetPoints()[j])));
+	}
+
+	for (int i = 0; i < 5; i++) {
+		int j = i * 25 + 100; 
+		pavilion_track.push_back(m_pCatmullRom->GetCentrelinePoints()[j] + m_pCatmullRom->GetOffsetPoints()[j] * 40.f);
+		pavilion_trackrot.push_back(glm::toMat4(Game::LookAt(m_pCatmullRom->GetOffsetPoints()[j], m_pCatmullRom->GetUpPoints()[j])));
+	}
+
+	// Render the saturn ring
+	for (int i = 0; i < 7; i++)
+	{
+		int j = i * 15; 
+		ring_track.push_back(m_pCatmullRom->GetCentrelinePoints()[j]);
+		ring_trackrot.push_back(glm::toMat4(Game::LookAt(m_pCatmullRom->GetUpPoints()[j + 1], normalize(m_pCatmullRom->GetCentrelinePoints()[j + 1] - m_pCatmullRom->GetCentrelinePoints()[j]))));
+	}
 
 	//==================== Player, Pickups, and Bombs =========================//
 
@@ -307,10 +342,11 @@ void Game::Initialise()
 
 	//============================ FBO AND SCREENS =============================//
 
-	m_pTV->Create("resources\\textures\\", "grassfloor01.jpg", width, height, 1.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
-	m_pIntro->Create("resources\\textures\\", "intro.png", width, height, 1.0f);
-	m_pDeath->Create("resources\\textures\\", "death.png", width, height, 1.0f);
-	m_pHeart->Create("resources\\textures\\", "heart.png", 25.f, 25.f, 1.f);
+	m_pTV->Create("resources\\textures\\", "grassfloor01.jpg", width/3, height/3, 1.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	m_pIntro->Create("resources\\textures\\", "intro.png", width, height, 1.0f);	//texture made by Jihae Han, with modified assets from http://www.freepik.com on April 2 2020
+	m_pDeath->Create("resources\\textures\\", "death.png", width, height, 1.0f);	//created by Jihae Han
+	m_pFilter->Create("resources\\textures\\", "death.png", width, height, 1.0f);	
+	m_pHeart->Create("resources\\textures\\", "heart.png", 25.f, 25.f, 1.f);		//created by Jihae Han
 	m_pFBO->Create(width, height);
 }
 
@@ -356,7 +392,11 @@ void Game::RenderScene(int pass)
 
 	// Call LookAt to create the view matrix and put this on the modelViewMatrix stack. 
 	// Store the view matrix and the normal matrix associated with the view matrix for later (they're useful for lighting -- since lighting is done in eye coordinates)
-	modelViewMatrixStack.LookAt(m_pCamera->GetPosition(), m_pCamera->GetView(), m_pCamera->GetUpVector());
+	if (pass == 0 && m_TVActive == true)
+		modelViewMatrixStack.LookAt(m_pPlayer->GetPosition() + glm::vec3(0,1,0)*40.f,m_pPlayer->GetPosition(), m_pPlayer->GetView());
+	else
+		 modelViewMatrixStack.LookAt(m_pCamera->GetPosition(), m_pCamera->GetView(), m_pCamera->GetUpVector());
+
 	glm::mat4 viewMatrix = modelViewMatrixStack.Top();
 	glm::mat3 viewNormalMatrix = m_pCamera->ComputeNormalMatrix(viewMatrix);
 
@@ -366,7 +406,7 @@ void Game::RenderScene(int pass)
 	glm::vec4 spotLightPosition1(m_pPlayer->GetPosition() + m_pPlayer->GetUpVector() * 10.f, 1);
 	glm::vec4 spotLightPosition2(m_pPlayer->GetPosition() + m_pPlayer->GetUpVector() * 21.f, 1);
 	glm::vec4 spotLightPosition3(-700, 500, 350, 1);
-	pMainProgram->SetUniform("light1.position", viewMatrix * lightPosition1);		// Position of light source *in eye coordinates*
+	pMainProgram->SetUniform("light1.position", viewMatrix * lightPosition1);	// Position of light source *in eye coordinates*
 	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f * m_lightswitch));		// Ambient colour of light
 	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f * m_lightswitch));		// Diffuse colour of light
 	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f * m_lightswitch));		// Specular colour of light
@@ -432,21 +472,10 @@ void Game::RenderScene(int pass)
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
 
-	// Render the tree 
-	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f);
-	treePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition);
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(treePosition);
-	modelViewMatrixStack.Scale(5.0f);
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pTreeMesh->Render();
-	modelViewMatrixStack.Pop();
-
 	// Render the oak
 	glDisable(GL_CULL_FACE);
-	glm::vec3 oakPosition = glm::vec3(50.0f, -10.f, 0.0f);
-	oakPosition.y = m_pHeightmapTerrain->ReturnGroundHeight(oakPosition);
+	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f);
+	treePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition);
 	modelViewMatrixStack.Push();
 	modelViewMatrixStack.Translate(treePosition);
 	modelViewMatrixStack.Scale(6.f);
@@ -478,6 +507,7 @@ void Game::RenderScene(int pass)
 		modelViewMatrixStack.Pop();
 	}
 
+	//Change lighting settins so that the objects will have some ambient light in 'dark mode'
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.2f + 0.7f * m_lightswitch));	
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(5.0f));	
 	pMainProgram->SetUniform("material1.shininess", 50.0f);	
@@ -485,8 +515,8 @@ void Game::RenderScene(int pass)
 	// Render the pavilion 
 	for (int i = 0; i < 5; i++) {
 		modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(m_pCatmullRom->GetCentrelinePoints()[i * 25 + 100] + m_pCatmullRom->GetOffsetPoints()[i * 25 + 100] * 40.f);
-		modelViewMatrixStack.RotateQuat(glm::toMat4(Game::LookAt(m_pCatmullRom->GetOffsetPoints()[i * 25 + 100], m_pCatmullRom->GetUpPoints()[i * 25 + 100])));
+		modelViewMatrixStack.Translate(pavilion_track[i]);
+		modelViewMatrixStack.RotateQuat(pavilion_trackrot[i]);
 		modelViewMatrixStack.Scale(6.2f);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
@@ -498,15 +528,15 @@ void Game::RenderScene(int pass)
 	for (int i = 0; i < 7; i++)
 	{
 		modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(m_pCatmullRom->GetCentrelinePoints()[i*15]);
-		modelViewMatrixStack.RotateQuat(glm::toMat4(Game::LookAt(m_pCatmullRom->GetUpPoints()[i * 15 + 1], normalize(m_pCatmullRom->GetCentrelinePoints()[i * 15 + 1]-m_pCatmullRom->GetCentrelinePoints()[i*15]))));
+		modelViewMatrixStack.Translate(ring_track[i]);
+		modelViewMatrixStack.RotateQuat(ring_trackrot[i]);
 		modelViewMatrixStack.Scale(20.0f);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		m_pSaturnRingMesh->Render();
 		modelViewMatrixStack.Pop();
 	}
-
+	
 	// Render the Bomb  
 	for (int i = 0; i < m_bomb_num; i++) {
 		(*m_pBombs)[i]->Render(modelViewMatrixStack, pMainProgram, m_pCamera, m_t);
@@ -523,7 +553,7 @@ void Game::RenderScene(int pass)
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		m_pCatmullRom->RenderTrack();
 	} modelViewMatrixStack.Pop();
-	
+
 	// Render the player
 	pMainProgram->SetUniform("vTransparency", 0.35f);
 	m_pPlayer->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
@@ -554,6 +584,31 @@ void Game::RenderScene(int pass)
 		(*m_pPickups)[i]->Render(modelViewMatrixStack, pToonProgram, m_pCamera);
 	}
 
+	// Render track outlines
+	pMainProgram->UseProgram();
+	pMainProgram->SetUniform("bUseTransparency", true);
+	pMainProgram->SetUniform("vTransparency", .3f - m_lightswitch * 0.3f);
+	for (int i = 0; i < 100; i++)
+	{
+		modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(wall_lefttrack[i]);
+		modelViewMatrixStack.RotateQuat(wall_lefttrackrot[i]);
+		modelViewMatrixStack.Scale(1.f);
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pTrackWall->Render();
+		modelViewMatrixStack.Pop();
+
+		modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(wall_righttrack[i]);
+		modelViewMatrixStack.RotateQuat(wall_righttrackrot[i]);
+		modelViewMatrixStack.Scale(1.f);
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pTrackWall->Render();
+		modelViewMatrixStack.Pop();
+	}
+
 	//============================ 2D SHADER ==========================================//
 	// Draw the 2D graphics after the 3D graphics
 	DisplayHUD(pass);
@@ -573,6 +628,7 @@ void Game::Update()
 	if (m_start == true) GameStart(); //allows the gameplay state to begin 
 
 }
+
 
 // Update method for gameplay state after passing intro screen
 void Game::GameStart()
@@ -595,9 +651,8 @@ void Game::GameStart()
 	if (m_start == true) m_pPlayer->Set(pNext, PlayerT, upNext);
 
 	//Set Camera Options
-	//m_pCamera->Update(m_dt); 
-	CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
-
+	if (m_freeview == false) CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
+	else { m_pCamera->Update(m_dt); }
 	//Update game variables
 	if (m_timerStart < 0) m_currentDistance += (float)(m_cameraSpeed * m_dt);
 
@@ -622,6 +677,7 @@ void Game::GameStart()
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 
 }
 
+
 void Game::CameraControl(glm::vec3& pos, glm::vec3& player, glm::vec3& viewpt, glm::vec3& strafe, glm::vec3& up, glm::vec3& upnext)
 {	
 	m_pPlayer->Update(m_dt); //player keys control
@@ -643,11 +699,36 @@ void Game::CameraControl(glm::vec3& pos, glm::vec3& player, glm::vec3& viewpt, g
 	}
 }
 
+void Game::ColourControl(CShaderProgram* fontProgram)
+{
+	switch (m_switchColour)
+	{
+	case 0: //normal colour
+		fontProgram->SetUniform("switchColour", 0);
+		break;
+	case 1: //black and white
+		fontProgram->SetUniform("switchColour", 1);
+		break;
+	case 2: //difference
+		fontProgram->SetUniform("switchColour", 2);
+		break;
+	case 3: //vibrant
+		fontProgram->SetUniform("switchColour", 3);
+		break;
+	case 4: //rgb
+		fontProgram->SetUniform("switchColour", 4);
+		break;
+	case 5: //transparencyoverlays
+		fontProgram->SetUniform("switchColour", 5);
+		break;
+	}
+}
+
 void Game::DisplayHUD(int pass)
 {
 	//set up matrix stack for 2D graphics
 	glutil::MatrixStack screenViewMatrixStack;
-	screenViewMatrixStack.SetIdentity();
+	screenViewMatrixStack.SetIdentity();	
 
 	//pass font shader and define uniform values
 	CShaderProgram *fontProgram = (*m_pShaderPrograms)[1];
@@ -657,6 +738,7 @@ void Game::DisplayHUD(int pass)
 	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 	fontProgram->SetUniform("t", (float)m_t/3);
 	fontProgram->SetUniform("bText", true);
+
 
 	//render in-game hud
 	if (m_start == true) { 
@@ -706,6 +788,7 @@ void Game::DisplayHUD(int pass)
 	//render death screen
 	if (m_lives == 0)
 	{
+		if (m_freeview == true) m_lives = -1;
 		glDisable(GL_CULL_FACE);
 		screenViewMatrixStack.Push();
 		screenViewMatrixStack.Translate(0.f, 0.f, 0.0f);
@@ -737,22 +820,44 @@ void Game::DisplayHUD(int pass)
 		// Use the font shader program and render the text
 		//m_pFtFont->Render(20, height - 40, 20, "FPS: %d", m_framesPerSecond);
 	}
-	
-	if (pass == 1 && m_TVActive == true) {
-		// Render the plane for the TV
-		// TV effects allow 'Rainbow mode'
+
+	if (pass == 1 && m_TVActive == false)
+	{
+		//Controls type of colour filter
+		ColourControl(fontProgram);
 		glDisable(GL_CULL_FACE);
 		screenViewMatrixStack.Push();
-		screenViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
+		screenViewMatrixStack.Translate(glm::vec3(0.f, 0.f, 0.0f));
 		screenViewMatrixStack.RotateRadians(glm::vec3(0.0f, 0.0f, 1.0f), (float)M_PI);
 		screenViewMatrixStack.Scale(-1.0);
+		fontProgram->SetUniform("bText", false);
+		fontProgram->SetUniform("bRGB", false);
+		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
+		fontProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(screenViewMatrixStack.Top()));
+		m_pFBO->BindTexture(0);
+		m_pFilter->Render(false);
+		screenViewMatrixStack.Pop();
+		glEnable(GL_CULL_FACE);
+	}
+
+	if (pass == 1 && m_TVActive == true) {
+		// Render the plane for the MINIMAP
+		glDisable(GL_CULL_FACE);
+		screenViewMatrixStack.Push();
+		screenViewMatrixStack.Translate(glm::vec3(0, height*2/3, 0.0f));
+		screenViewMatrixStack.RotateRadians(glm::vec3(0.0f, 0.0f, 1.0f), (float)M_PI);
+		screenViewMatrixStack.Scale(-1.0);
+		fontProgram->SetUniform("bText", false);
+		fontProgram->SetUniform("bRGB", false);
 		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
 		fontProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(screenViewMatrixStack.Top()));
 		m_pFBO->BindTexture(0);
 		m_pTV->Render(false);
 		screenViewMatrixStack.Pop();
 		glEnable(GL_CULL_FACE);
-	}
+	}	
+	
+
 }
 
 // The game loop runs repeatedly until game over
@@ -857,7 +962,7 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 		case VK_SPACE: //starts gameplay state
 			m_start = true;
 			break;
-		case '1': //plays event sound
+		case 'P': //plays event sound
 			m_pAudio->PlayEventSound();
 			break;
 		case VK_TAB: //turns ON/OFF 'dark' mode
@@ -870,6 +975,12 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 				m_TVActive = 0;
 			else m_TVActive = true;
 			break;
+		case 'F': //toggle 'free view'
+			if (m_freeview == true)
+				m_freeview = 0;
+			else m_freeview = true;
+			m_pCamera->Reset(glm::vec3(0, 15, 0), glm::vec3(0, 15, -10), glm::vec3(0,1,0));
+			break; 
 		case VK_F1: //switches to 3rd person camera
 			m_cameraControl = 1;
 			break;
@@ -878,6 +989,24 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 			break;
 		case VK_F3: //switches to top-down view camera
 			m_cameraControl = 3;
+			break;
+		case '0':
+			m_switchColour = 0;
+			break;
+		case '1':
+			m_switchColour = 1;
+			break;
+		case '2':
+			m_switchColour = 2;
+			break;
+		case '3':
+			m_switchColour = 3;
+			break;
+		case '4':
+			m_switchColour = 4;
+			break;		
+		case '5':
+			m_switchColour = 5;
 			break;
 		case 189: //cases for tooh shader
 			if (m_levels > 1) m_levels = m_levels - 1;

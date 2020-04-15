@@ -18,7 +18,8 @@ public:
 
 	// Set the camera position, viewpoint, and up vector
 	void Set(glm::vec3 &position, glm::vec3 &viewpoint, glm::vec3 &upVector);
-	
+	void Reset(glm::vec3 position, glm::vec3 viewpoint, glm::vec3 upVector);
+
 	// Rotate the camera viewpoint -- this effectively rotates the camera
 	void RotateViewPoint(float angle, const glm::vec3 &viewPoint);
 

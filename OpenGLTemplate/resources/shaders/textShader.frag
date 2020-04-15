@@ -8,6 +8,7 @@ uniform vec4 vColour;
 uniform float t;
 uniform bool bText;
 uniform bool bRGB;
+uniform int switchColour; 
 
 void main()
 {
@@ -25,6 +26,17 @@ void main()
 	}
 	else
 	{
-		vOutputColour = vTexColour;
-	}
+		if (switchColour == 0)
+			vOutputColour = vTexColour;
+		else if (switchColour == 1)
+			vOutputColour = vec4(vec3(vTexColour.r), 1.0);
+		else if (switchColour == 2) 
+			vOutputColour = vec4(vTexColour.g, vTexColour.b, vTexColour.r, 1);
+		else if (switchColour == 3)
+			vOutputColour = vec4(vTexColour.r*vTexColour.r, vTexColour.g * vTexColour.g, vTexColour.b *vTexColour.b, 1);
+		else if (switchColour == 4)
+			vOutputColour = vTexColour * rgbColour;
+		else if (switchColour == 5)
+			vOutputColour = vec4(1 - vTexColour.r, 1 - vTexColour.g, 1 - vTexColour.b, 1);
+	}	 
 }

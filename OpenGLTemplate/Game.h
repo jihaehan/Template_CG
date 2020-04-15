@@ -39,13 +39,14 @@ private:
 	CCamera *m_pCamera;
 	vector <CShaderProgram *> *m_pShaderPrograms;
 	CFreeTypeFont *m_pFtFont;
-	COpenAssetImportMesh* m_pTreeMesh;
 	COpenAssetImportMesh* m_pOakMesh; 
 	COpenAssetImportMesh* m_pPavilionMesh;
 	COpenAssetImportMesh* m_pSaturnRingMesh;
 	COpenAssetImportMesh* m_pBikeMesh; 
+	COpenAssetImportMesh* m_pBirdMesh;
 	CSphere *m_pSphere;
 	CTetrahedron* m_pTetrahedron;
+	CTetrahedron* m_pTrackWall;
 	CUrchin* m_pUrchin;
 	CHeightMapTerrain* m_pHeightmapTerrain;
 	CHighResolutionTimer *m_pHighResolutionTimer;
@@ -59,6 +60,7 @@ private:
 	CPlane* m_pHeart;
 	CPlane* m_pIntro;
 	CPlane* m_pDeath;
+	CPlane* m_pFilter;
 
 	// Some other member variables
 	double m_dt;
@@ -79,10 +81,23 @@ private:
 	int m_bomb_num;
 	int m_lives;
 	int m_cameraControl;
+	bool m_freeview;
 	bool m_start;
 	int m_timerStart;
+	int m_switchColour;
 	int width;  //screen width
 	int height; //screen height
+
+	//store quaternion vector values at initiaization bc 
+	//performance intensive in runtime
+	vector<glm::vec3> wall_lefttrack;
+	vector<glm::vec3> wall_righttrack; 
+	vector<glm::mat4> wall_lefttrackrot; 
+	vector<glm::mat4> wall_righttrackrot; 
+	vector<glm::vec3> pavilion_track;
+	vector<glm::mat4> pavilion_trackrot;
+	vector<glm::vec3> ring_track;
+	vector<glm::mat4> ring_trackrot;
 
 public:
 	Game();
@@ -103,6 +118,7 @@ private:
 	double m_elapsedTime;
 
 	void CameraControl(glm::vec3& pos, glm::vec3 &player, glm::vec3& viewpt, glm::vec3& strafe, glm::vec3& up, glm::vec3& upnext);
+	void ColourControl(CShaderProgram* shaderProgram);
 	glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest);
 	glm::quat LookAt(glm::vec3 direction, glm::vec3 desiredUp);
 };

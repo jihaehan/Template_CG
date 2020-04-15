@@ -29,6 +29,8 @@ public:
 	vector<glm::vec3> GetOffsetPoints() const { return m_offsetPoints; };
 	vector<glm::vec3> GetCentrelinePoints() const { return m_centrelinePoints; };
 	vector<glm::vec3> GetUpPoints() const { return m_centrelineUpVectors; };
+	vector<glm::vec3> GetLeftOffsetPoints() const { return m_leftOffsetPoints; };
+	vector<glm::vec3> GetRightOffsetPoints() const { return m_rightOffsetPoints; };
 
 private:
 

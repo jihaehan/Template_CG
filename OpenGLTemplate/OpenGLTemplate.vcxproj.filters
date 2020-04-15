@@ -163,13 +163,13 @@
     <ClCompile Include="Pickup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Shaders</Filter>
-    </ClCompile>
     <ClCompile Include="FrameBufferObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Bomb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -202,6 +202,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="resources\shaders\disintegrateShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\simpleDepth.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\simpleDepth.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
