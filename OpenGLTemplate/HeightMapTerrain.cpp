@@ -157,7 +157,10 @@ bool CHeightMapTerrain::Create(const char* terrainFilename, const char* textureF
 	// Load a texture for texture mapping the mesh
 	m_texture.Load(textureFilename, true);
 
-
+	m_texture0.Load("resources\\textures\\vangogh_sower3.png", true);
+	m_texture1.Load("resources\\textures\\vangogh_sower5.png", true);
+	m_texture2.Load("resources\\textures\\vangogh_sower6.png", true);
+	m_texture3.Load("resources\\textures\\vangogh_sower6.png", true);
 
 	return true;
 }
@@ -187,8 +190,17 @@ float CHeightMapTerrain::ReturnGroundHeight(glm::vec3 p)
 	return c;
 }
 
-void CHeightMapTerrain::Render()
+void CHeightMapTerrain::RenderDark()
 {
 	m_texture.Bind();
+	m_mesh.Render();
+}
+
+void CHeightMapTerrain::RenderDay()
+{
+	m_texture0.Bind(0);
+	m_texture1.Bind(1);
+	m_texture2.Bind(2);
+	m_texture3.Bind(3);
 	m_mesh.Render();
 }

@@ -67,18 +67,14 @@ vec3 BlinnPhongSpotlightModel(LightInfo light, vec4 eyePosition, vec3 eyeNorm)
 	return ambient;
 }
 
-uniform sampler2D sampler0, sampler1, sampler2, sampler3;  
+uniform sampler2D sampler0;  // The texture sampler
 uniform samplerCube CubeMapTex;
-
-uniform bool bUseTexture;		 // A flag indicating if texture-mapping should be applied
-uniform bool bUseTransparency;	 //A flag indicating if transparent texture mapping should be applied
+uniform bool bUseTexture;    // A flag indicating if texture-mapping should be applied
+uniform bool bUseTransparency; //A flag indicating if transparent texture mapping should be applied
 uniform bool renderSkybox;
-uniform bool renderTerrain;
 uniform float vTransparency;
 in vec3 worldPosition;
 
-uniform float fMinHeight = -100;
-uniform float fMaxHeight = 100;
 
 
 void main()
@@ -88,31 +84,10 @@ void main()
 		vColour += BlinnPhongSpotlightModel(spotlight[i], eyePosition, normalize(eyeNorm));	//spotlight1
 	}	
 
-	if (renderSkybox) 
-	{
+	if (renderSkybox) {
 		vOutputColour = texture(CubeMapTex, worldPosition);
 
-	} 
-	else if (renderTerrain) 
-	{
-		vec4 vTexColour0 = texture(sampler0, vTexCoord);
-		vec4 vTexColour1 = texture(sampler1, vTexCoord);
-		vec4 vTexColour2 = texture(sampler2, vTexCoord);
-		vec4 vTexColour3 = texture(sampler3, vTexCoord);
-
-		float f = clamp(3*(worldPosition.y - fMinHeight) / (fMaxHeight - fMinHeight), 0, 3);
-		vec4 vTexColour;
-
-		if (f < 1)
-			vTexColour = mix(vTexColour0, vTexColour1, f);
-		else if (f < 2)
-			vTexColour = mix(vTexColour1, vTexColour2, f - 1.0);
-		else
-			vTexColour = mix(vTexColour2, vTexColour3, f - 2.0);
-		vOutputColour = vTexColour*vec4(vColour, 1.0f);
-	}
-	else
-	{
+	} else {
 
 		// Get the texel colour from the texture sampler
 		vec4 vTexColour = texture(sampler0, vTexCoord);	

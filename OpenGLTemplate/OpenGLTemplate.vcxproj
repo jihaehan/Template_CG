@@ -182,14 +182,12 @@
     <None Include="resources\shaders\disintegrateShader.vert" />
     <None Include="resources\shaders\mainShader.frag" />
     <None Include="resources\shaders\mainShader.vert" />
-    <None Include="resources\shaders\simpleDepth.frag" />
-    <None Include="resources\shaders\simpleDepth.vert" />
-    <None Include="resources\shaders\sphereShader.frag" />
-    <None Include="resources\shaders\sphereShader.vert" />
     <None Include="resources\shaders\sphereShaderEd.frag" />
     <None Include="resources\shaders\sphereShaderEd.vert" />
     <None Include="resources\shaders\textShader.frag" />
     <None Include="resources\shaders\textShader.vert" />
+    <None Include="resources\shaders\treeShader.frag" />
+    <None Include="resources\shaders\treeShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

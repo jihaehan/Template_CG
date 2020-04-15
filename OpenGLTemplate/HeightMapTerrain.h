@@ -11,7 +11,8 @@ public:
 	~CHeightMapTerrain();
 	bool Create(const char* terrainFilename, const char* textureFilename, glm::vec3 origin, float terrainSizeX, float terrainSizeZ, float terrainHeightScale);
 	float ReturnGroundHeight(glm::vec3 p);
-	void Render();
+	void RenderDay();
+	void RenderDark();
 
 private:
 	int m_width, m_height;
@@ -21,6 +22,7 @@ private:
 	float m_terrainSizeX, m_terrainSizeZ;
 	glm::vec3 m_origin;
 	CTexture m_texture;
+	CTexture m_texture0, m_texture1, m_texture2, m_texture3;
 	FIBITMAP* m_dib;
 
 	glm::vec3 WorldToImageCoordinates(glm::vec3 p);

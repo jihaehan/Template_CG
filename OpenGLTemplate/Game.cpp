@@ -206,8 +206,10 @@ void Game::Initialise()
 	sShaderFileNames.push_back("mainShader.frag");
 	sShaderFileNames.push_back("textShader.vert");	   //modified text shader to allow other 2D rendering
 	sShaderFileNames.push_back("textShader.frag");
-	sShaderFileNames.push_back("sphereShaderEd.vert"); //modified version of Ed's toon shader
+	sShaderFileNames.push_back("sphereShaderEd.vert");  //modified version of Ed's toon shader
 	sShaderFileNames.push_back("sphereShaderEd.frag"); 
+	sShaderFileNames.push_back("treeShader.vert");		//treeShader
+	sShaderFileNames.push_back("treeShader.frag");
 
 	for (int i = 0; i < (int) sShaderFileNames.size(); i++) {
 		string sExt = sShaderFileNames[i].substr((int) sShaderFileNames[i].size()-4, 4);
@@ -457,20 +459,28 @@ void Game::RenderScene(int pass)
 	modelViewMatrixStack.Pop();
 
 	// Render the heightmap terrain
+	pMainProgram->SetUniform("renderTerrain", m_lightswitch);
 	modelViewMatrixStack.Push();
 	modelViewMatrixStack.Translate(glm::vec3(-140.f, 40.f, 0.f));
 	modelViewMatrixStack.RotateRadians({ 0.f, 1.f, 0.f }, (float)M_PI);
 	modelViewMatrixStack.Scale({ 1.f });
-	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.8f * m_lightswitch));	// Ambient material reflectance
+	pMainProgram->SetUniform("sampler0", 0);
+	pMainProgram->SetUniform("sampler1", 1);
+	pMainProgram->SetUniform("sampler2", 2);
+	pMainProgram->SetUniform("sampler3", 3);
+	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.8f * m_lightswitch));	
+	pMainProgram->SetUniform("material1.shininess", 50.0f);
 	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pHeightmapTerrain->Render();
+	if (m_lightswitch) m_pHeightmapTerrain->RenderDay(); else m_pHeightmapTerrain->RenderDark();
 	modelViewMatrixStack.Pop();
+	pMainProgram->SetUniform("renderTerrain", false);
 
 	// Turn on diffuse + specular materials 
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f * m_lightswitch));	// Ambient material reflectance
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
+	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 
 	// Render the oak
 	glDisable(GL_CULL_FACE);
