@@ -11,6 +11,7 @@ public:
 
 	// Create a framebuffer object with a texture of a given size
 	bool Create(int a_iWidth, int a_iHeight);
+	bool CreateShadow(int a_iWidth, int a_iHeight);
 
 	// Bind the FBO for rendering to texture
 	void Bind(bool bSetFullViewport = true);
@@ -28,6 +29,8 @@ public:
 	void SetSamplerObjectParameter(GLenum parameter, GLenum value);
 	void SetSamplerObjectParameterf(GLenum parameter, float value);
 
+	// Spit out depth buffer
+	void SpitOutDepthBuffer();
 
 	// Get the width, height
 	int GetWidth();

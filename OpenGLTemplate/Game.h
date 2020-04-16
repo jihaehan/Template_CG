@@ -99,6 +99,10 @@ private:
 	vector<glm::vec3> ring_track;
 	vector<glm::mat4> ring_trackrot;
 
+	//gl shader subroutines and matrices
+	GLuint pass1Index, pass2Index;
+	glm::mat4 shadowBias, lightPV;
+
 public:
 	Game();
 	~Game();

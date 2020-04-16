@@ -160,6 +160,12 @@ glm::mat4* CCamera::GetPerspectiveProjectionMatrix()
 	return &m_perspectiveProjectionMatrix;
 }
 
+//Return projection matrix
+glm::mat4 CCamera::GetProjectionMatrix()
+{
+	return m_perspectiveProjectionMatrix;
+}
+
 // Return the camera orthographic projection matrix
 glm::mat4* CCamera::GetOrthographicProjectionMatrix()
 {
