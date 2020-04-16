@@ -248,6 +248,14 @@ void Game::Initialise()
 	pToonProgram->LinkProgram();
 	m_pShaderPrograms->push_back(pToonProgram);				//m_pShaderPrograms[2]
 
+	// Create the tree shader program
+	CShaderProgram* pTreeShader = new CShaderProgram;
+	pTreeShader->CreateProgram();
+	pTreeShader->AddShaderToProgram(&shShaders[6]);
+	pTreeShader->AddShaderToProgram(&shShaders[7]);
+	pTreeShader->LinkProgram();
+	m_pShaderPrograms->push_back(pTreeShader);				//m_pShaderPrograms[3]
+
 	// You can follow this pattern to load additional shaders
 
 	//============================ OBJECTS, CREATE ======================================//
@@ -482,6 +490,7 @@ void Game::RenderScene(int pass)
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
 	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 
+	/*
 	// Render the oak
 	glDisable(GL_CULL_FACE);
 	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f);
@@ -494,6 +503,7 @@ void Game::RenderScene(int pass)
 	m_pOakMesh->Render();
 	modelViewMatrixStack.Pop();
 	glEnable(GL_CULL_FACE);
+	*/
 
 	// Render the tetrahedron towers
 	for (int i = 0; i < 20; i++) {
@@ -567,15 +577,69 @@ void Game::RenderScene(int pass)
 	// Render the player
 	pMainProgram->SetUniform("vTransparency", 0.35f);
 	m_pPlayer->Render(modelViewMatrixStack, pMainProgram, m_pCamera);
-
-	pMainProgram->SetUniform("bUseTexture", false); //ensures that textures are off for sphere shader
 	
+	//============================ TREE SHADER ======================================//
+	// Switch to the tree program
+	CShaderProgram* pTreeProgram = (*m_pShaderPrograms)[3];
+	pTreeProgram->UseProgram();
+	pTreeProgram->SetUniform("sampler0", 0);
+	pTreeProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
+	pTreeProgram->SetUniform("light1.position", viewMatrix * lightPosition1);	// Position of light source *in eye coordinates*
+	pTreeProgram->SetUniform("light1.La", glm::vec3(1.0f * m_lightswitch));		// Ambient colour of light
+	pTreeProgram->SetUniform("light1.Ld", glm::vec3(1.0f * m_lightswitch));		// Diffuse colour of light
+	pTreeProgram->SetUniform("light1.Ls", glm::vec3(1.0f * m_lightswitch));		// Specular colour of light
+	pTreeProgram->SetUniform("spotlight[0].position", viewMatrix * spotLightPosition0);
+	pTreeProgram->SetUniform("spotlight[0].direction", glm::normalize(viewNormalMatrix * glm::vec3(0, -1, 0)));
+	pTreeProgram->SetUniform("spotlight[0].La", glm::vec3(.7f - .7f * m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[0].Ld", glm::vec3(.7f - .7f * m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[0].Ls", glm::vec3(.7f - .7f * m_lightswitch, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[0].exponent", 20.0f);
+	pTreeProgram->SetUniform("spotlight[0].cutoff", 100.f);
+	pTreeProgram->SetUniform("spotlight[1].position", viewMatrix * spotLightPosition1);
+	pTreeProgram->SetUniform("spotlight[1].direction", glm::normalize(viewNormalMatrix * (m_pPlayer->GetView() - m_pPlayer->GetUpVector())));
+	pTreeProgram->SetUniform("spotlight[1].La", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[1].Ld", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[1].Ls", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[1].exponent", 10.0f);
+	pTreeProgram->SetUniform("spotlight[1].cutoff", 50.f);
+	pTreeProgram->SetUniform("spotlight[2].position", viewMatrix * spotLightPosition2);
+	pTreeProgram->SetUniform("spotlight[2].direction", glm::normalize(viewNormalMatrix * (-m_pPlayer->GetUpVector())));
+	pTreeProgram->SetUniform("spotlight[2].La", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[2].Ld", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[2].Ls", glm::vec3(0.f, 1.0f - 1.0f * m_lightswitch, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[2].exponent", 30.0f);
+	pTreeProgram->SetUniform("spotlight[2].cutoff", 30.f);
+	pTreeProgram->SetUniform("spotlight[3].position", viewMatrix * spotLightPosition3);
+	pTreeProgram->SetUniform("spotlight[3].direction", glm::normalize(viewNormalMatrix * glm::vec3(1, -1, -1)));
+	pTreeProgram->SetUniform("spotlight[3].La", glm::vec3(0.f, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[3].Ld", glm::vec3(0.f, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[3].Ls", glm::vec3(0.f, 0.f, 1.0f - 1.0f * m_lightswitch));
+	pTreeProgram->SetUniform("spotlight[3].exponent", 20.0f);
+	pTreeProgram->SetUniform("spotlight[3].cutoff", 100.f);
+
+	pTreeProgram->SetUniform("material1.Ma", glm::vec3(0.5f * m_lightswitch));	
+	pTreeProgram->SetUniform("material1.Md", glm::vec3(0.5f));	
+	pTreeProgram->SetUniform("material1.Ms", glm::vec3(1.0f));		
+	pTreeProgram->SetUniform("material1.shininess", 15.0f);		
+
+	// Render the oak
+	glDisable(GL_CULL_FACE);
+	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f);
+	treePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition);
+	modelViewMatrixStack.Push();
+	modelViewMatrixStack.Translate(treePosition);
+	modelViewMatrixStack.Scale(6.f);
+	pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	m_pOakMesh->Render();
+	modelViewMatrixStack.Pop();
+	glEnable(GL_CULL_FACE);
+
 	//============================ TOON SHADER ======================================//
 	// Switch to the toon program
 	// This is a modified implementation fo the toon shader
 	CShaderProgram* pToonProgram = (*m_pShaderPrograms)[2];
 	pToonProgram->UseProgram();
-
 	// Set light and materials in sphere programme
 	pToonProgram->SetUniform("material1.Ma", glm::vec3(m_lightup, 1.0f - m_lightup, m_lightup));
 	pToonProgram->SetUniform("material1.Md", glm::vec3(m_lightup, 1.0f - m_lightup, m_lightup));
@@ -623,9 +687,6 @@ void Game::RenderScene(int pass)
 	// Draw the 2D graphics after the 3D graphics
 	DisplayHUD(pass);
 
-	//============================ SWAP BUFFERS	 ======================================//
-	// Swap buffers to show the rendered image
-	SwapBuffers(m_gameWindow.Hdc());
 }
 
 
