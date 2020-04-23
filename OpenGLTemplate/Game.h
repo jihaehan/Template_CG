@@ -18,6 +18,7 @@ class COpenAssetImportMesh;
 class CAudio;
 class CTetrahedron;
 class CUrchin;
+class CQuad;
 class CHeightMapTerrain;
 class CCatmullRom;
 class CPlayer; 
@@ -31,6 +32,7 @@ private:
 	void Initialise();
 	void Update();
 	void Render();
+	void RenderStencil();
 	void RenderScene(int pass);
 
 	// Pointers to game objects.  They will get allocated in Game::Initialise()
@@ -48,6 +50,7 @@ private:
 	CTetrahedron* m_pTetrahedron;
 	CTetrahedron* m_pTrackWall;
 	CUrchin* m_pUrchin;
+	CQuad* m_pQuad;
 	CHeightMapTerrain* m_pHeightmapTerrain;
 	CHighResolutionTimer *m_pHighResolutionTimer;
 	CAudio *m_pAudio;

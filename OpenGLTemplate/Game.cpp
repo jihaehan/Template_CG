@@ -33,6 +33,7 @@ Source code drawn from a number of sources and examples, including contributions
 #include "Plane.h"
 #include "Tetrahedron.h"
 #include "Urchin.h"
+#include "Quad.h"
 #include "Shaders.h"
 #include "FreeTypeFont.h"
 #include "Sphere.h"
@@ -63,6 +64,7 @@ Game::Game()
 	m_pTetrahedron = NULL;
 	m_pTrackWall = NULL;
 	m_pUrchin = NULL;
+	m_pQuad = NULL;
 	m_pHeightmapTerrain = NULL;
 	m_pHighResolutionTimer = NULL;
 	m_pAudio = NULL;
@@ -121,6 +123,7 @@ Game::~Game()
 	delete m_pTetrahedron;
 	delete m_pTrackWall;
 	delete m_pUrchin;
+	delete m_pQuad;
 	delete m_pHeightmapTerrain;
 	delete m_pAudio;
 	delete m_pCatmullRom; 
@@ -176,6 +179,7 @@ void Game::Initialise()
 	m_pTetrahedron = new CTetrahedron;
 	m_pTrackWall = new CTetrahedron;
 	m_pUrchin = new CUrchin;
+	m_pQuad = new CQuad;
 	m_pHeightmapTerrain = new CHeightMapTerrain;
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
@@ -294,6 +298,9 @@ void Game::Initialise()
 	// Create an urchin
 	m_pUrchin->Create("resources\\textures\\", "dirtpile02.png", 4);  // Texture modified from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
+
+	// Create a quad
+	m_pQuad->Create(glm::vec4(1));
 		
 	// Create a heightmap terrain
 	m_pHeightmapTerrain->Create("resources\\textures\\heightmap_s.png", "resources\\textures\\vangogh_sower6.png", glm::vec3(0, 0, 0), 900.0f, 900.0f, 150.f); 
@@ -372,15 +379,16 @@ void Game::Initialise()
 // Render method runs repeatedly in a loop
 void Game::Render() 
 {
+	
 	m_pFBO->Bind();
 	//glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-	glEnable(GL_POLYGON_OFFSET_FILL);
-	glPolygonOffset(2.5f, 10.0f);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_FRONT);
+	//glEnable(GL_POLYGON_OFFSET_FILL);
+	//glPolygonOffset(2.5f, 10.0f);
 	RenderScene(0);
-	glCullFace(GL_BACK);
-	glFlush();
+	//glCullFace(GL_BACK);
+	//glFlush();
 	m_pFBO->SpitOutDepthBuffer();
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -389,6 +397,50 @@ void Game::Render()
 
 	// Swap buffers to show the rendered image
 	SwapBuffers(m_gameWindow.Hdc());
+}
+
+void Game::RenderStencil()
+{
+	/*
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	
+	// Create the stencil as a square area by rendering a quad
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glStencilFunc(GL_ALWAYS, 1, 1);
+	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+	glm::vec2 p = m_pQuad->GetPos();
+	glm::mat4 mModelMatrix = glm::mat4(1);
+	mModelMatrix = glm::translate(mModelMatrix, glm::vec3(p.x / 50, -p.y / 50, 0));
+	mModelMatrix = glm::scale(mModelMatrix, glm::vec3(1.5f));
+
+	CShaderProgram* pMainProgram = (*m_pShaderPrograms)[0];
+	pMainProgram->SetUniform("modelMatrix", mModelMatrix);
+
+	//m_pQuad->Render();
+
+	// Clear the colour and depth buffers (but not the stencil buffer!)
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Set up rendering so we render inside the stenciled area
+	glStencilFunc(GL_EQUAL, 1, 1);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	// Render objects as wireframe
+	/*
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	mModelMatrix = glm::mat4(1);
+	mModelMatrix = glm::rotate(mModelMatrix, m_rotY, glm::vec3(1, 0, 0));
+	mModelMatrix = glm::rotate(mModelMatrix, m_rotY, glm::vec3(0, 1, 0));
+	RenderSpheres();
+
+	// Set up rendering outside the stenciled area
+	glStencilFunc(GL_NOTEQUAL, 1, 1);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	// Sender objects as solid surface
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	RenderSpheres();
+	*/
 }
 
 void Game::RenderScene(int pass)
