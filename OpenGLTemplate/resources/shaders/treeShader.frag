@@ -116,6 +116,20 @@ void recordDepth()
 
 void main()
 {
-	RenderPass();
-	
+	//RenderPass();
+
+	vec3 ambient = light1.La * material1.Ma;
+    vec3 diffAndSpec = PhongModelDiffAndSpec(eyePosition, eyeNorm);
+
+    float shadow = 1.0;
+    if( vShadowCoord.z >= 0 ) {
+        shadow = textureProj(ShadowMap, vShadowCoord);
+    }
+
+    // If the fragment is in shadow, use ambient light only.
+    FragColor = vec4(diffAndSpec * shadow + ambient, 1.0);
+
+    // Gamma correct
+    FragColor = pow( FragColor, vec4(1.0 / 2.2) );
+
 }

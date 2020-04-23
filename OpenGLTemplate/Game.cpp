@@ -257,8 +257,8 @@ void Game::Initialise()
 	pTreeShader->LinkProgram();
 	m_pShaderPrograms->push_back(pTreeShader);				//m_pShaderPrograms[3]
 
-	pass1Index = glGetSubroutineIndex(pTreeShader->GetProgramID(), GL_FRAGMENT_SHADER, "recordDepth");
-	pass2Index = glGetSubroutineIndex(pTreeShader->GetProgramID(), GL_FRAGMENT_SHADER, "shadeWithShadow");
+	//pass1Index = glGetSubroutineIndex(pTreeShader->GetProgramID(), GL_FRAGMENT_SHADER, "recordDepth");
+	//pass2Index = glGetSubroutineIndex(pTreeShader->GetProgramID(), GL_FRAGMENT_SHADER, "shadeWithShadow");
 	shadowBias = glm::mat4(glm::vec4(0.5f, 0.0f, 0.0f, 0.0f),
 		glm::vec4(0.0f, 0.5f, 0.0f, 0.0f),
 		glm::vec4(0.0f, 0.0f, 0.5f, 0.0f),
@@ -373,7 +373,7 @@ void Game::Initialise()
 void Game::Render() 
 {
 	m_pFBO->Bind();
-	glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
+	//glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	glEnable(GL_POLYGON_OFFSET_FILL);
@@ -384,7 +384,7 @@ void Game::Render()
 	m_pFBO->SpitOutDepthBuffer();
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass2Index);
+	//glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass2Index);
 	RenderScene(1);
 
 	// Swap buffers to show the rendered image
@@ -420,18 +420,21 @@ void Game::RenderScene(int pass)
 	pTreeProgram->SetUniform("matrices.MVP", m_pCamera->GetProjectionMatrix() * modelViewMatrixStack.Top());
 	pTreeProgram->SetUniform("matrices.shadowMatrix", lightPV * glm::mat4(1.0f));
 
-	// Render the oak
-	glDisable(GL_CULL_FACE);
-	glm::vec3 treePosition0 = glm::vec3(50.0f, 0.0f, 0.0f);
-	treePosition0.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition0);
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(treePosition0);
-	modelViewMatrixStack.Scale(6.f);
-	pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pOakMesh->Render();
-	modelViewMatrixStack.Pop();
-	glEnable(GL_CULL_FACE);
+	if (pass == 1)
+	{
+		// Render the oak
+		glDisable(GL_CULL_FACE);
+		glm::vec3 treePosition0 = glm::vec3(50.0f, 0.0f, 0.0f);
+		treePosition0.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition0);
+		modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(treePosition0);
+		modelViewMatrixStack.Scale(6.f);
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pOakMesh->Render();
+		modelViewMatrixStack.Pop();
+		glEnable(GL_CULL_FACE);
+	}
 
 	//============================ MAIN SHADER ======================================//
 	// Use the main shader program 
@@ -941,7 +944,7 @@ void Game::DisplayHUD(int pass)
 		// Use the font shader program and render the text
 		//m_pFtFont->Render(20, height - 40, 20, "FPS: %d", m_framesPerSecond);
 	}
-
+	/*
 	if (pass == 1 && m_TVActive == false)
 	{
 		//Controls type of colour filter
@@ -960,8 +963,8 @@ void Game::DisplayHUD(int pass)
 		m_pFilter->Render(false);
 		screenViewMatrixStack.Pop();
 		glEnable(GL_CULL_FACE);
-	}
-
+	} */
+	
 	if (pass == 1 && m_TVActive == true) {
 		// Render the plane for the MINIMAP
 		glDisable(GL_CULL_FACE);
@@ -973,7 +976,8 @@ void Game::DisplayHUD(int pass)
 		fontProgram->SetUniform("bRGB", false);
 		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
 		fontProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(screenViewMatrixStack.Top()));
-		m_pFBO->BindTexture(0);
+		m_pFBO->BindDepth(0);
+		//m_pFBO->BindTexture(0);
 		m_pTV->Render(false);
 		screenViewMatrixStack.Pop();
 		glEnable(GL_CULL_FACE);
