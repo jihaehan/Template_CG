@@ -212,6 +212,7 @@ void Game::Initialise()
 	sShaderFileNames.push_back("textShader.vert");	   //modified text shader to allow other 2D rendering
 	sShaderFileNames.push_back("textShader.frag");
 	sShaderFileNames.push_back("sphereShaderEd.vert");  //modified version of Ed's toon shader
+	sShaderFileNames.push_back("sphereShaderEd.geom");
 	sShaderFileNames.push_back("sphereShaderEd.frag"); 
 	sShaderFileNames.push_back("treeShader.vert");		//treeShader
 	sShaderFileNames.push_back("treeShader.frag");
@@ -250,14 +251,15 @@ void Game::Initialise()
 	pToonProgram->CreateProgram();
 	pToonProgram->AddShaderToProgram(&shShaders[4]);
 	pToonProgram->AddShaderToProgram(&shShaders[5]);
+	pToonProgram->AddShaderToProgram(&shShaders[6]);
 	pToonProgram->LinkProgram();
 	m_pShaderPrograms->push_back(pToonProgram);				//m_pShaderPrograms[2]
 
 	// Create the tree shader program
 	CShaderProgram* pTreeShader = new CShaderProgram;
 	pTreeShader->CreateProgram();
-	pTreeShader->AddShaderToProgram(&shShaders[6]);
 	pTreeShader->AddShaderToProgram(&shShaders[7]);
+	pTreeShader->AddShaderToProgram(&shShaders[8]);
 	pTreeShader->LinkProgram();
 	m_pShaderPrograms->push_back(pTreeShader);				//m_pShaderPrograms[3]
 
@@ -401,7 +403,21 @@ void Game::Render()
 
 void Game::RenderStencil()
 {
-	/*
+	// Setup Shader and matrixStack;
+	glutil::MatrixStack modelViewMatrixStack;
+	modelViewMatrixStack.SetIdentity();
+
+	CShaderProgram* pMainProgram = (*m_pShaderPrograms)[0];
+	glm::vec4 lightPosition1(-150, 200, -50, 1);
+	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f * m_lightswitch));		// Specular colour of light
+	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f * m_lightswitch));		// Ambient colour of light
+	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f * m_lightswitch));		// Diffuse colour of light
+	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f * m_lightswitch));		// Specular colour of light
+	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+
+
+	// Setup Stencil
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	
 	// Create the stencil as a square area by rendering a quad
@@ -413,10 +429,7 @@ void Game::RenderStencil()
 	mModelMatrix = glm::translate(mModelMatrix, glm::vec3(p.x / 50, -p.y / 50, 0));
 	mModelMatrix = glm::scale(mModelMatrix, glm::vec3(1.5f));
 
-	CShaderProgram* pMainProgram = (*m_pShaderPrograms)[0];
-	pMainProgram->SetUniform("modelMatrix", mModelMatrix);
-
-	//m_pQuad->Render();
+	m_pQuad->Render();
 
 	// Clear the colour and depth buffers (but not the stencil buffer!)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -757,10 +770,11 @@ void Game::RenderScene(int pass)
 	pToonProgram->SetUniform("t", m_t);
 	pToonProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
 	pToonProgram->SetUniform("levels", m_levels);
+	pToonProgram->SetUniform("sampler0", 0);
 
 	// Render the Pickup  
 	for (int i = 0; i < m_pickup_num; i++) {
-		(*m_pPickups)[i]->Render(modelViewMatrixStack, pToonProgram, m_pCamera);
+		(*m_pPickups)[i]->Render(modelViewMatrixStack, pToonProgram, m_pCamera, m_dt);
 	}
 
 	// Render track outlines

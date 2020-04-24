@@ -210,5 +210,8 @@
     <None Include="resources\shaders\treeShader.vert">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="resources\shaders\sphereShaderEd.geom">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

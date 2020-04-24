@@ -35,20 +35,18 @@ layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec2 inCoord;
 layout (location = 2) in vec3 inNormal;
 
-out vec3 vColour;
+out vec3 vColourPass;
+out vec2 vTexCoordPass;
 out float fIntensity;
 
 void main()
 {	
 
-	// Normally, one would simply transform the vertex spatial position using 
-	// gl_Position = matrices.projMatrix * matrices.modelViewMatrix * vec4(inPosition, 1.0);
-	
 	// However in this lab we're going to play with the vertex position before this transformation
 	vec3 p = inPosition;
 	//p.y += sin(p.z + t);
 	p.z += sin(p.x + t);
-	gl_Position = matrices.projMatrix * matrices.modelViewMatrix * vec4(p, 1.0);
+	gl_Position =  vec4(p, 1.0);
 
 	// This code implements the Blinn-Phong reflectance model (to be discussed in Lecture 6)
 	// Code based on the OpenGL 4.0 Shading Language Cookbook, pages 92 - 93
@@ -68,6 +66,7 @@ void main()
 		specularColour = light1.Ls * material1.Ms * fSpecularIntensity;
 	}
 	
-	vColour = ambientColour + diffuseColour + specularColour;
-	fIntensity = fDiffuseIntensity + fSpecularIntensity;	
+	vColourPass = ambientColour + diffuseColour + specularColour;
+	vTexCoordPass = inCoord;
+	fIntensity = fDiffuseIntensity + fSpecularIntensity;
 } 
