@@ -24,7 +24,7 @@ void CPickup::SetPosition(glm::vec3& pickup_pos)
 	m_position = pickup_pos;
 }
 
-void CPickup::Render(glutil::MatrixStack matrixStack, CShaderProgram* shaderProgram, CCamera* camera, float dt)
+void CPickup::Render(glutil::MatrixStack matrixStack, CShaderProgram* shaderProgram, CCamera* camera)
 {
 
 	if (m_is_active == true) {

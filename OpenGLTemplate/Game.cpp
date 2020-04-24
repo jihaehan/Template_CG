@@ -399,11 +399,11 @@ void Game::Render()
 	//glCullFace(GL_FRONT);
 	//glEnable(GL_POLYGON_OFFSET_FILL);
 	//glPolygonOffset(2.5f, 10.0f);
-	RenderScene(0);
+	/*RenderScene(0);*/
 	//glCullFace(GL_BACK);
 	//glFlush();
-	m_pFBO->SpitOutDepthBuffer();
-	
+	//m_pFBO->SpitOutDepthBuffer();
+	RenderStencil();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass2Index);
 	RenderScene(1);
@@ -414,32 +414,48 @@ void Game::Render()
 
 void Game::RenderStencil()
 {
+	glEnable(GL_STENCIL_TEST);
+	glEnable(GL_DEPTH_TEST);
+
+	// Setup Stencil
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glStencilFunc(GL_ALWAYS, 1, 1);
+	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
 	// Setup Shader and matrixStack;
 	glutil::MatrixStack modelViewMatrixStack;
-	modelViewMatrixStack.SetIdentity();
 
 	CShaderProgram* pMainProgram = (*m_pShaderPrograms)[0];
 	glm::vec4 lightPosition1(-150, 200, -50, 1);
+	pMainProgram->SetUniform("bUseTexture", true);
+	pMainProgram->SetUniform("sampler0", 0);
+	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f * m_lightswitch));	// Ambient material reflectance
+	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
+	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
+	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f * m_lightswitch));		// Specular colour of light
 	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f * m_lightswitch));		// Ambient colour of light
 	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f * m_lightswitch));		// Diffuse colour of light
 	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f * m_lightswitch));		// Specular colour of light
 	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-
-
-	// Setup Stencil
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	
-	// Create the stencil as a square area by rendering a quad
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glStencilFunc(GL_ALWAYS, 1, 1);
-	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-	glm::vec2 p = m_pQuad->GetPos();
+	// Render Quad
+	modelViewMatrixStack.Push();
+		glm::vec2 p = m_pQuad->GetPos();
+		modelViewMatrixStack.Translate(glm::vec3(p.x / 50, -p.y / 50, 0));
+		modelViewMatrixStack.Scale(500.f);
+		pMainProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pQuad->Render();
+	modelViewMatrixStack.Pop();
+
 	glm::mat4 mModelMatrix = glm::mat4(1);
 	mModelMatrix = glm::translate(mModelMatrix, glm::vec3(p.x / 50, -p.y / 50, 0));
 	mModelMatrix = glm::scale(mModelMatrix, glm::vec3(1.5f));
-
+	pMainProgram->SetUniform("matrices.modelViewMatrix", mModelMatrix);
 	m_pQuad->Render();
 
 	// Clear the colour and depth buffers (but not the stencil buffer!)
@@ -450,21 +466,38 @@ void Game::RenderStencil()
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
 	// Render objects as wireframe
-	/*
+	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	mModelMatrix = glm::mat4(1);
-	mModelMatrix = glm::rotate(mModelMatrix, m_rotY, glm::vec3(1, 0, 0));
-	mModelMatrix = glm::rotate(mModelMatrix, m_rotY, glm::vec3(0, 1, 0));
-	RenderSpheres();
+	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f);
+	treePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition);
+	modelViewMatrixStack.Push();
+	modelViewMatrixStack.Translate(treePosition);
+	modelViewMatrixStack.Scale(6.f);
+	pMainProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
+	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	m_pOakMesh->Render();
+	modelViewMatrixStack.Pop();
 
 	// Set up rendering outside the stenciled area
 	glStencilFunc(GL_NOTEQUAL, 1, 1);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
+
 	// Sender objects as solid surface
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	RenderSpheres();
-	*/
+
+	modelViewMatrixStack.Push();
+	modelViewMatrixStack.Translate(treePosition);
+	modelViewMatrixStack.Scale(6.f);
+	pMainProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
+	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	m_pOakMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 }
 
 void Game::RenderScene(int pass)
@@ -802,7 +835,7 @@ void Game::RenderScene(int pass)
 
 	// Render the Pickup  
 	for (int i = 0; i < m_pickup_num; i++) {
-		(*m_pPickups)[i]->Render(modelViewMatrixStack, pToonProgram, m_pCamera, m_dt);
+		(*m_pPickups)[i]->Render(modelViewMatrixStack, pToonProgram, m_pCamera);
 	}
 
 	// Render track outlines
@@ -1075,7 +1108,8 @@ void Game::DisplayHUD(int pass)
 		screenViewMatrixStack.Pop();
 		glEnable(GL_CULL_FACE);
 	}	
-	
+	fontProgram->SetUniform("bText", false);
+	fontProgram->SetUniform("bRGB", false);
 
 }
 
@@ -1235,7 +1269,17 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 			break;
 		}
 		break;
-
+	
+	case WM_MOUSEMOVE: {
+		RECT dimensions;
+		GetClientRect(window, &dimensions);
+		int width = dimensions.right - dimensions.left;
+		int height = dimensions.bottom - dimensions.top;
+		float m_xCoord = (float)(LOWORD(l_param) - width / 2);
+		float m_yCoord = (float)(HIWORD(l_param) - height / 2);
+		m_pQuad->SetPos(glm::vec2(m_xCoord, m_yCoord));
+		break;
+	}
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
