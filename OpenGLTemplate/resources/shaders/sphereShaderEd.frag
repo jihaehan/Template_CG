@@ -16,5 +16,6 @@ void main()
 	vec3 quantisedColour = floor(vColour * levels) / levels;
 	vec4 vTexColour = texture(sampler0, vTexCoord);
 
-	vOutputColour = vec4(quantisedColour, 0.5f);// * vTexColour;
+	vOutputColour = vec4(quantisedColour, 0.5f) * vTexColour;
+	
 }
