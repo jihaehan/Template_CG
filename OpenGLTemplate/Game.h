@@ -32,6 +32,7 @@ private:
 	void Initialise();
 	void Update();
 	void Render();
+	void RenderShadow();
 	void RenderScene(int pass);
 
 	// Pointers to game objects.  They will get allocated in Game::Initialise()
@@ -58,6 +59,7 @@ private:
 	vector <CPickup*> *m_pPickups;
 	vector <CBomb*>* m_pBombs;
 	CFrameBufferObject* m_pFBO;
+	CFrameBufferObject* m_pShadow;
 	CPlane* m_pTV;
 	CPlane* m_pHeart;
 	CPlane* m_pIntro;

@@ -37,6 +37,7 @@ private:
 	float m_speed{0.f};
 	float m_fspeed{ 0.f };
 	float m_clamp{ 9.f };
+	float m_lean{ 0.f };
 
 	glm::quat RotationQuat{};
 };

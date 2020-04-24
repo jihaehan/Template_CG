@@ -1,16 +1,15 @@
-#version 400 core
+#version 400
 
-layout (location = 0) in vec3 aPosition;
+layout (location = 0) in vec3 Position;
+layout (location = 1) in vec2 TexCoord;
+layout (location = 2) in vec3 Normal;
 
-uniform struct Matrices
-{
-	mat4 modelViewMatrix;
-	mat4 lightSpaceMatrix;
-} matrices;
+uniform mat4 gWVP;
 
+out vec2 TexCoordOut;
 
 void main()
 {
-	gl_Position = matrices.lightSpaceMatrix * matrices.modelViewMatrix * vec4(aPosition, 1.0);
-}  
-
+    gl_Position = gWVP * vec4(Position, 1.0);
+    TexCoordOut = TexCoord;
+}

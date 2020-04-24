@@ -58,83 +58,31 @@ bool CFrameBufferObject::Create(int a_iWidth, int a_iHeight)
 	// Check completeness
 	return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 }
-
-bool CFrameBufferObject::CreateShadow(int a_iWidth, int a_iHeight)
+bool CFrameBufferObject::Init(int a_iWidth, int a_iHeight)
 {
-	GLfloat border[] = { 1.0f, 0.0f,0.0f,0.0f };
+	glGenFramebuffers(1, &m_fbo);
+	glGenTextures(1, &m_shadowMap);
+	glBindTexture(GL_TEXTURE_2D, m_shadowMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, a_iWidth, a_iHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	if (m_uiFramebuffer != 0) return false;
+	glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
 
-	// Create a framebuffer object and bind it
-	glGenFramebuffers(1, &m_uiFramebuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_uiFramebuffer);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-		GL_TEXTURE_2D, m_uiDepthTexture, 0);
+	GLenum Status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
-	// Create a sampler object and set texture properties.  Note here, we're mipmapping
-	glGenSamplers(1, &m_uiSampler);
-	SetSamplerObjectParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	SetSamplerObjectParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	SetSamplerObjectParameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	SetSamplerObjectParameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	// Now, create a depth texture for the FBO
-	glGenTextures(1, &m_uiDepthTexture);
-	glBindTexture(GL_TEXTURE_2D, m_uiDepthTexture);
-	// glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, a_iWidth, a_iHeight);  // The Superbible suggests this, but it is OpenGL4.2 feature
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, a_iWidth, a_iHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LESS);
-
-	// Now attach the colour and depth textures to the FBO
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_uiDepthTexture, 0);
-
-	// Tell OpenGL that we want to draw into the frambuffer's colour attachment
-	static const GLenum draw_buffers[] = { GL_NONE };
-	glDrawBuffers(1, draw_buffers);
-
-	m_iWidth = a_iWidth;
-	m_iHeight = a_iHeight;
-
-	// Check completeness
-	return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+	if (Status != GL_FRAMEBUFFER_COMPLETE) {
+		printf("FB error, status: 0x%x\n", Status);
+		return false;
+	}
 }
 
-void CFrameBufferObject::SpitOutDepthBuffer()
-{
-	int size = m_iWidth * m_iHeight;
-	float* buffer = new float[size];
-	unsigned char* imgBuffer = new unsigned char[size * 4];
 
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, GL_FLOAT, buffer);
-
-	for (int i = 0; i < m_iHeight; i++)
-		for (int j = 0; j < m_iWidth; j++)
-		{
-			int imgIdx = 4 * ((i * m_iWidth) + j);
-			int bufIdx = ((m_iHeight - i - 1) * m_iWidth) + j;
-
-			// This is just to make a more visible image.  Scale so that
-			// the range (minVal, 1.0) maps to (0.0, 1.0).  This probably should
-			// be tweaked for different light configurations.
-			float minVal = 0.88f;
-			float scale = (buffer[bufIdx] - minVal) / (1.0f - minVal);
-			unsigned char val = (unsigned char)(scale * 255);
-			imgBuffer[imgIdx] = val;
-			imgBuffer[imgIdx + 1] = val;
-			imgBuffer[imgIdx + 2] = val;
-			imgBuffer[imgIdx + 3] = 0xff;
-		}
-
-	delete[] buffer;
-	delete[] imgBuffer;
-	//exit(1);
-}
 
 // Bind the FBO so we can render to it
 void CFrameBufferObject::Bind(bool bSetFullViewport)
@@ -146,6 +94,17 @@ void CFrameBufferObject::Bind(bool bSetFullViewport)
 	float one = 1.0f;
 	glClearBufferfv(GL_COLOR, 0, &clearColour.r);
 	glClearBufferfv(GL_DEPTH, 0, &one);
+}
+
+void CFrameBufferObject::BindForWriting()
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
+}
+
+void CFrameBufferObject::BindForReading(GLuint textureunit)
+{
+	glActiveTexture(textureunit);
+	glBindTexture(GL_TEXTURE_2D, m_shadowMap);
 }
 
 // Beind the frambuffer texture so it is active

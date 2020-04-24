@@ -1,6 +1,13 @@
 #version 400 core
 
+in vec2 TexCoordOut;
+uniform sampler2D gShadowMap;
+
+out vec4 FragColor;
+
 void main()
-{             
-    // gl_FragDepth = gl_FragCoord.z;
-}  
+{
+    float Depth = texture(gShadowMap, TexCoordOut).x;
+    Depth = 1.0 - (1.0 - Depth) * 25.0;
+    FragColor = vec4(Depth);
+}

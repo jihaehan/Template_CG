@@ -222,5 +222,11 @@
     <None Include="resources\shaders\explodeShader.vert">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="resources\shaders\simpleDepth.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\simpleDepth.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

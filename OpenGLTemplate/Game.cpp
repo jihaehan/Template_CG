@@ -73,6 +73,7 @@ Game::Game()
 	m_pPickups = NULL;
 	m_pBombs = NULL;
 	m_pFBO = NULL;
+	m_pShadow = NULL;
 	m_pTV = NULL;
 	m_pIntro = NULL;
 	m_pDeath = NULL;
@@ -129,6 +130,7 @@ Game::~Game()
 	delete m_pCatmullRom; 
 	delete m_pPlayer;
 	delete m_pFBO;
+	delete m_pShadow;
 	delete m_pTV;
 	delete m_pIntro;
 	delete m_pDeath;
@@ -187,6 +189,7 @@ void Game::Initialise()
 	m_pPickups = new vector <CPickup*>;
 	m_pBombs = new vector <CBomb*>;
 	m_pFBO = new CFrameBufferObject;
+	m_pShadow = new CFrameBufferObject;
 	m_pTV = new CPlane;
 	m_pIntro = new CPlane;
 	m_pDeath = new CPlane;
@@ -385,8 +388,8 @@ void Game::Initialise()
 	m_pDeath->Create("resources\\textures\\", "death.png", width, height, 1.0f);	//created by Jihae Han
 	m_pFilter->Create("resources\\textures\\", "death.png", width, height, 1.0f);	
 	m_pHeart->Create("resources\\textures\\", "heart.png", 25.f, 25.f, 1.f);		//created by Jihae Han
-	//m_pFBO->Create(width, height);
-	m_pFBO->CreateShadow(width, height);
+	m_pFBO->Create(width, height);
+	//m_pShadow->Create(width, height);
 }
 
 // Render method runs repeatedly in a loop
@@ -394,17 +397,8 @@ void Game::Render()
 {
 	
 	m_pFBO->Bind();
-	//glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_FRONT);
-	//glEnable(GL_POLYGON_OFFSET_FILL);
-	//glPolygonOffset(2.5f, 10.0f);
-	/*RenderScene(0);*/
-	//glCullFace(GL_BACK);
-	//glFlush();
-	//m_pFBO->SpitOutDepthBuffer();
+	RenderScene(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	//glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass2Index);
 	RenderScene(1);
 
 	// Swap buffers to show the rendered image
@@ -423,38 +417,6 @@ void Game::RenderScene(int pass)
 	// Set up a matrix stack
 	glutil::MatrixStack modelViewMatrixStack;
 	modelViewMatrixStack.SetIdentity();
-	//============================ TREE SHADER =====================================//
-	// Set up tree shader
-	glm::vec3 lightPos = { -150, 200, -50 };
-	if (pass == 0) modelViewMatrixStack.LookAt(lightPos, m_pCamera->GetView(), m_pCamera->GetUpVector());
-	else modelViewMatrixStack.LookAt(m_pCamera->GetPosition(), m_pCamera->GetView(), m_pCamera->GetUpVector());
-
-	lightPV = shadowBias * m_pCamera->GetProjectionMatrix() * modelViewMatrixStack.Top();
-
-	CShaderProgram* pTreeProgram = (*m_pShaderPrograms)[3];
-	pTreeProgram->SetUniform("ShadowMap", 0);
-	pTreeProgram->SetUniform("light1.Ld", glm::vec3(.85f * m_lightswitch));			
-	pTreeProgram->SetUniform("light1.position", modelViewMatrixStack.Top() * glm::vec4(lightPos, 1.0));	// Position of light source *in eye coordinates*
-	pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	pTreeProgram->SetUniform("matrices.MVP", m_pCamera->GetProjectionMatrix() * modelViewMatrixStack.Top());
-	pTreeProgram->SetUniform("matrices.shadowMatrix", lightPV * glm::mat4(1.0f));
-
-	if (pass == 1)
-	{
-		// Render the oak
-		glDisable(GL_CULL_FACE);
-		glm::vec3 treePosition0 = glm::vec3(50.0f, 0.0f, 0.0f);
-		treePosition0.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition0);
-		modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(treePosition0);
-		modelViewMatrixStack.Scale(6.f);
-		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pOakMesh->Render();
-		modelViewMatrixStack.Pop();
-		glEnable(GL_CULL_FACE);
-	}
 
 	//============================ MAIN SHADER ======================================//
 	// Use the main shader program 
@@ -473,10 +435,10 @@ void Game::RenderScene(int pass)
 
 	// Call LookAt to create the view matrix and put this on the modelViewMatrix stack. 
 	// Store the view matrix and the normal matrix associated with the view matrix for later (they're useful for lighting -- since lighting is done in eye coordinates)
-	//if (pass == 0 && m_TVActive == true)
-		//modelViewMatrixStack.LookAt(m_pPlayer->GetPosition() + glm::vec3(0,1,0)*40.f,m_pPlayer->GetPosition(), m_pPlayer->GetView());
-//	else
-//		 modelViewMatrixStack.LookAt(m_pCamera->GetPosition(), m_pCamera->GetView(), m_pCamera->GetUpVector());
+	if (pass == 0 && m_TVActive == true)
+		modelViewMatrixStack.LookAt(m_pPlayer->GetPosition() + glm::vec3(0,1,0)*40.f,m_pPlayer->GetPosition(), m_pPlayer->GetView());
+	else
+ 		modelViewMatrixStack.LookAt(m_pCamera->GetPosition(), m_pCamera->GetView(), m_pCamera->GetUpVector());
 
 	glm::mat4 viewMatrix = modelViewMatrixStack.Top();
 	glm::mat3 viewNormalMatrix = m_pCamera->ComputeNormalMatrix(viewMatrix);
@@ -981,7 +943,7 @@ void Game::DisplayHUD(int pass)
 		// Use the font shader program and render the text
 		//m_pFtFont->Render(20, height - 40, 20, "FPS: %d", m_framesPerSecond);
 	}
-	/*
+	
 	if (pass == 1 && m_TVActive == false)
 	{
 		//Controls type of colour filter
@@ -995,12 +957,11 @@ void Game::DisplayHUD(int pass)
 		fontProgram->SetUniform("bRGB", false);
 		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
 		fontProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(screenViewMatrixStack.Top()));
-		//m_pFBO->BindTexture(0);
-		m_pFBO->BindDepth(0);
+		m_pFBO->BindTexture(0);
 		m_pFilter->Render(false);
 		screenViewMatrixStack.Pop();
 		glEnable(GL_CULL_FACE);
-	} */
+	} 
 	
 	if (pass == 1 && m_TVActive == true) {
 		// Render the plane for the MINIMAP
@@ -1013,8 +974,7 @@ void Game::DisplayHUD(int pass)
 		fontProgram->SetUniform("bRGB", false);
 		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
 		fontProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(screenViewMatrixStack.Top()));
-		m_pFBO->BindDepth(0);
-		//m_pFBO->BindTexture(0);
+		m_pFBO->BindTexture(0);
 		m_pTV->Render(false);
 		screenViewMatrixStack.Pop();
 		glEnable(GL_CULL_FACE);

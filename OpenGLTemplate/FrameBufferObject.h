@@ -11,16 +11,18 @@ public:
 
 	// Create a framebuffer object with a texture of a given size
 	bool Create(int a_iWidth, int a_iHeight);
-	bool CreateShadow(int a_iWidth, int a_iHeight);
+	bool Init(int width, int height);
 
 	// Bind the FBO for rendering to texture
 	void Bind(bool bSetFullViewport = true);
-
+	void BindForWriting();
+	
 	// Bind the texture (usually on a 2nd or later pass in a multi-pass rendering technique)
 	void BindTexture(int iTextureUnit);
 
 	// Bind the depth (usually on a 2nd or later pass in a multi-pass rendering technique)
 	void BindDepth(int iTextureUnit);
+	void BindForReading(GLenum textureunit);
 
 	// Delete the framebuffer
 	void Release();
@@ -28,9 +30,6 @@ public:
 	// Set methods for the sampler object
 	void SetSamplerObjectParameter(GLenum parameter, GLenum value);
 	void SetSamplerObjectParameterf(GLenum parameter, float value);
-
-	// Spit out depth buffer
-	void SpitOutDepthBuffer();
 
 	// Get the width, height
 	int GetWidth();
@@ -44,6 +43,9 @@ private:
 	UINT m_uiColourTexture;
 	UINT m_uiDepthTexture;
 	UINT m_uiSampler;
+
+	GLuint m_shadowMap;
+	GLuint m_fbo;
 
 
 };
