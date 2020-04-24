@@ -182,6 +182,9 @@
   <ItemGroup>
     <None Include="resources\shaders\disintegrateShader.frag" />
     <None Include="resources\shaders\disintegrateShader.vert" />
+    <None Include="resources\shaders\explodeShader.frag" />
+    <None Include="resources\shaders\explodeShader.geom" />
+    <None Include="resources\shaders\explodeShader.vert" />
     <None Include="resources\shaders\mainShader.frag" />
     <None Include="resources\shaders\mainShader.vert" />
     <None Include="resources\shaders\sphereShaderEd.frag" />

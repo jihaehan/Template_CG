@@ -216,6 +216,9 @@ void Game::Initialise()
 	sShaderFileNames.push_back("sphereShaderEd.frag"); 
 	sShaderFileNames.push_back("treeShader.vert");		//treeShader
 	sShaderFileNames.push_back("treeShader.frag");
+	sShaderFileNames.push_back("explodeShader.vert");	//explosion shader for bombs
+	sShaderFileNames.push_back("explodeShader.geom");
+	sShaderFileNames.push_back("explodeShader.frag");	
 
 	for (int i = 0; i < (int) sShaderFileNames.size(); i++) {
 		string sExt = sShaderFileNames[i].substr((int) sShaderFileNames[i].size()-4, 4);
@@ -269,6 +272,14 @@ void Game::Initialise()
 		glm::vec4(0.0f, 0.5f, 0.0f, 0.0f),
 		glm::vec4(0.0f, 0.0f, 0.5f, 0.0f),
 		glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+	CShaderProgram* pExplodeShader = new CShaderProgram;
+	pExplodeShader->CreateProgram();
+	pExplodeShader->AddShaderToProgram(&shShaders[9]);
+	pExplodeShader->AddShaderToProgram(&shShaders[10]);
+	pExplodeShader->AddShaderToProgram(&shShaders[11]);
+	pExplodeShader->LinkProgram();
+	m_pShaderPrograms->push_back(pExplodeShader);			//m_pShaderPrograms[4]
 
 	// You can follow this pattern to load additional shaders
 
@@ -672,11 +683,6 @@ void Game::RenderScene(int pass)
 		m_pSaturnRingMesh->Render();
 		modelViewMatrixStack.Pop();
 	}
-	
-	// Render the Bomb  
-	for (int i = 0; i < m_bomb_num; i++) {
-		(*m_pBombs)[i]->Render(modelViewMatrixStack, pMainProgram, m_pCamera, m_t);
-	}
 
 	//============================ TRANSPARENCY ==========================================//
 	pMainProgram->SetUniform("bUseTexture", 1 - m_lightswitch); 
@@ -753,6 +759,28 @@ void Game::RenderScene(int pass)
 	modelViewMatrixStack.Pop();
 	glEnable(GL_CULL_FACE);
 	*/
+	
+	//============================ EXPLODE SHADER ===================================//
+	// It makes bombs explode upon contact
+	CShaderProgram* pExplodeProgram = (*m_pShaderPrograms)[4];
+	pExplodeProgram->UseProgram();
+	pExplodeProgram->SetUniform("material1.Ma", glm::vec3(0.5f * m_lightswitch));	// Ambient material reflectance
+	pExplodeProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
+	pExplodeProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
+	pExplodeProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
+	pExplodeProgram->SetUniform("light1.La", glm::vec3(1.f, 1.f, 1.f));
+	pExplodeProgram->SetUniform("light1.Ld", glm::vec3(1.0f, 1.0f, 1.0f));
+	pExplodeProgram->SetUniform("light1.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
+	pExplodeProgram->SetUniform("light1.position", viewMatrix* lightPosition1);
+	pExplodeProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
+	pExplodeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	pExplodeProgram->SetUniform("sampler0", 0);
+
+	// Render the Bomb  
+	for (int i = 0; i < m_bomb_num; i++) {
+		(*m_pBombs)[i]->Render(modelViewMatrixStack, pExplodeProgram, m_pCamera, m_t);
+	}
+
 	//============================ TOON SHADER ======================================//
 	// Switch to the toon program
 	// This is a modified implementation fo the toon shader
@@ -801,7 +829,6 @@ void Game::RenderScene(int pass)
 		m_pTrackWall->Render();
 		modelViewMatrixStack.Pop();
 	}
-
 	//============================ 2D SHADER ==========================================//
 	// Draw the 2D graphics after the 3D graphics
 	DisplayHUD(pass);

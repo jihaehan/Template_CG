@@ -213,5 +213,14 @@
     <None Include="resources\shaders\sphereShaderEd.geom">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="resources\shaders\explodeShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\explodeShader.geom">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\explodeShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

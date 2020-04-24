@@ -23,6 +23,10 @@ private:
 	CUrchin* m_bomb{};
 
 	bool m_is_active;
+	float m_timer;
+	float m_is_triggered;
+	float explodeFactor;
+
 	glm::vec3 m_position{ -155.f, 140.f, 57.f };
 
 };

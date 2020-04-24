@@ -47,13 +47,17 @@ void CPickup::Update(float dt, const glm::vec3 &player_pos, int &score)
 	if ((m_is_active == true) && distance < 4.0f)
 	{
 		m_is_triggered = true;
-		explodeFactor += dt * 0.02f;
 
 		score += 10;
 	}
-	else if (m_is_triggered == true && distance > 25.f)
+	else if (m_is_triggered == true)
 	{
-		m_is_active = false;
-		CPickup::~CPickup();
+		if (distance < 25.f)
+			explodeFactor += dt * 0.01f;
+		else
+		{
+			m_is_active = false;
+			CPickup::~CPickup();
+		}
 	}
 }
