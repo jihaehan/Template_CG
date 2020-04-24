@@ -403,101 +403,12 @@ void Game::Render()
 	//glCullFace(GL_BACK);
 	//glFlush();
 	//m_pFBO->SpitOutDepthBuffer();
-	RenderStencil();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass2Index);
 	RenderScene(1);
 
 	// Swap buffers to show the rendered image
 	SwapBuffers(m_gameWindow.Hdc());
-}
-
-void Game::RenderStencil()
-{
-	glEnable(GL_STENCIL_TEST);
-	glEnable(GL_DEPTH_TEST);
-
-	// Setup Stencil
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glStencilFunc(GL_ALWAYS, 1, 1);
-	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-
-	// Setup Shader and matrixStack;
-	glutil::MatrixStack modelViewMatrixStack;
-
-	CShaderProgram* pMainProgram = (*m_pShaderPrograms)[0];
-	glm::vec4 lightPosition1(-150, 200, -50, 1);
-	pMainProgram->SetUniform("bUseTexture", true);
-	pMainProgram->SetUniform("sampler0", 0);
-	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f * m_lightswitch));	// Ambient material reflectance
-	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
-	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
-	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
-	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f * m_lightswitch));		// Specular colour of light
-	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f * m_lightswitch));		// Ambient colour of light
-	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f * m_lightswitch));		// Diffuse colour of light
-	pMainProgram->SetUniform("light1.Ls", glm::vec3(1.0f * m_lightswitch));		// Specular colour of light
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	
-	// Render Quad
-	modelViewMatrixStack.Push();
-		glm::vec2 p = m_pQuad->GetPos();
-		modelViewMatrixStack.Translate(glm::vec3(p.x / 50, -p.y / 50, 0));
-		modelViewMatrixStack.Scale(500.f);
-		pMainProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pQuad->Render();
-	modelViewMatrixStack.Pop();
-
-	glm::mat4 mModelMatrix = glm::mat4(1);
-	mModelMatrix = glm::translate(mModelMatrix, glm::vec3(p.x / 50, -p.y / 50, 0));
-	mModelMatrix = glm::scale(mModelMatrix, glm::vec3(1.5f));
-	pMainProgram->SetUniform("matrices.modelViewMatrix", mModelMatrix);
-	m_pQuad->Render();
-
-	// Clear the colour and depth buffers (but not the stencil buffer!)
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// Set up rendering so we render inside the stenciled area
-	glStencilFunc(GL_EQUAL, 1, 1);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-	// Render objects as wireframe
-	
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f);
-	treePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition);
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(treePosition);
-	modelViewMatrixStack.Scale(6.f);
-	pMainProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pOakMesh->Render();
-	modelViewMatrixStack.Pop();
-
-	// Set up rendering outside the stenciled area
-	glStencilFunc(GL_NOTEQUAL, 1, 1);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-
-	// Sender objects as solid surface
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(treePosition);
-	modelViewMatrixStack.Scale(6.f);
-	pMainProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pOakMesh->Render();
-	modelViewMatrixStack.Pop();
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
 }
 
 void Game::RenderScene(int pass)
@@ -1270,16 +1181,6 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 		}
 		break;
 	
-	case WM_MOUSEMOVE: {
-		RECT dimensions;
-		GetClientRect(window, &dimensions);
-		int width = dimensions.right - dimensions.left;
-		int height = dimensions.bottom - dimensions.top;
-		float m_xCoord = (float)(LOWORD(l_param) - width / 2);
-		float m_yCoord = (float)(HIWORD(l_param) - height / 2);
-		m_pQuad->SetPos(glm::vec2(m_xCoord, m_yCoord));
-		break;
-	}
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;

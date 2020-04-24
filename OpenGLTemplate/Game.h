@@ -32,7 +32,6 @@ private:
 	void Initialise();
 	void Update();
 	void Render();
-	void RenderStencil();
 	void RenderScene(int pass);
 
 	// Pointers to game objects.  They will get allocated in Game::Initialise()
