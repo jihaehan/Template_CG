@@ -1,11 +1,10 @@
 #version 400 core
 
-in vec2 vTexCoord;			
-in vec3 position;
-in vec3 eyeNorm;
+in vec2 vTexCoord;			// Interpolated texture coordinate using texture coordinate from the vertex shader
 in vec4 eyePosition;
-in vec4 vShadowCoord;
-//out vec4 vOutputColour;		
+in vec3 eyeNorm;
+
+out vec4 vOutputColour;		// The output colour
 
 struct LightInfo
 {
@@ -29,9 +28,6 @@ struct MaterialInfo
 uniform LightInfo light1; 
 uniform LightInfo spotlight[4];
 uniform MaterialInfo material1; 
-uniform sampler2DShadow ShadowMap;
-
-layout (location = 0) out vec4 FragColor;
 
 vec3 PhongModel(vec4 eyePosition, vec3 eyeNorm)
 {
@@ -48,22 +44,6 @@ vec3 PhongModel(vec4 eyePosition, vec3 eyeNorm)
 		specular = light1.Ls * material1.Ms * pow(max(dot(r, v), 0.0f), material1.shininess + eps);
 
 	return ambient + diffuse + specular;
-}
-
-vec3 PhongModelDiffAndSpec(vec4 eyePosition, vec3 eyeNorm)
-{
-	vec3 s = normalize(vec3(light1.position - eyePosition));
-	vec3 v = normalize(-eyePosition.xyz);
-	vec3 r = reflect(-s, eyeNorm);
-	vec3 n = eyeNorm;
-	float sDotN = max(dot(s, n), 0.0f);
-	vec3 diffuse = light1.Ld * material1.Md * sDotN;
-	vec3 specular = vec3(0.0f);
-	float eps = 0.000001f; // add eps to shininess below -- pow not defined if second argument is 0 (as described in GLSL documentation)
-	if (sDotN > 0.0f) 
-		specular = light1.Ls * material1.Ms * pow(max(dot(r, v), 0.0f), material1.shininess + eps);
-
-	return diffuse + specular;
 }
 
 vec3 BlinnPhongSpotlightModel(LightInfo light, vec4 eyePosition, vec3 eyeNorm)
@@ -87,49 +67,19 @@ vec3 BlinnPhongSpotlightModel(LightInfo light, vec4 eyePosition, vec3 eyeNorm)
 	return ambient;
 }
 
-subroutine void RenderPassType();
-subroutine uniform RenderPassType RenderPass;
+uniform sampler2D sampler0;  
 
-subroutine (RenderPassType)
-void shadeWithShadow()
-{
-	vec3 ambient = light1.La * material1.Ma;
-    vec3 diffAndSpec = PhongModelDiffAndSpec(eyePosition, eyeNorm);
-
-    float shadow = 1.0;
-    if( vShadowCoord.z >= 0 ) {
-        shadow = textureProj(ShadowMap, vShadowCoord);
-    }
-
-    // If the fragment is in shadow, use ambient light only.
-    FragColor = vec4(diffAndSpec * shadow + ambient, 1.0);
-
-    // Gamma correct
-    FragColor = pow( FragColor, vec4(1.0 / 2.2) );
-}
-
-subroutine (RenderPassType)
-void recordDepth()
-{
-    // Do nothing, depth will be written automatically
-}
 
 void main()
 {
-	//RenderPass();
+	vec3 vColour = PhongModel(eyePosition, normalize(eyeNorm));
+	for (int i = 0; i < 4; i++) 
+	{
+		vColour += BlinnPhongSpotlightModel(spotlight[i], eyePosition, normalize(eyeNorm));	
+	}	
 
-	vec3 ambient = light1.La * material1.Ma;
-    vec3 diffAndSpec = PhongModelDiffAndSpec(eyePosition, eyeNorm);
+	vec4 vTexColour = texture(sampler0, vTexCoord);	
 
-    float shadow = 1.0;
-    if( vShadowCoord.z >= 0 ) {
-        shadow = textureProj(ShadowMap, vShadowCoord);
-    }
-
-    // If the fragment is in shadow, use ambient light only.
-    FragColor = vec4(diffAndSpec * shadow + ambient, 1.0);
-
-    // Gamma correct
-    FragColor = pow( FragColor, vec4(1.0 / 2.2) );
-
+	vOutputColour = vTexColour*vec4(vColour, 1.0f);	
+	
 }

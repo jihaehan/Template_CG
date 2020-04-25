@@ -73,7 +73,6 @@ Game::Game()
 	m_pPickups = NULL;
 	m_pBombs = NULL;
 	m_pFBO = NULL;
-	m_pShadow = NULL;
 	m_pTV = NULL;
 	m_pIntro = NULL;
 	m_pDeath = NULL;
@@ -130,7 +129,6 @@ Game::~Game()
 	delete m_pCatmullRom; 
 	delete m_pPlayer;
 	delete m_pFBO;
-	delete m_pShadow;
 	delete m_pTV;
 	delete m_pIntro;
 	delete m_pDeath;
@@ -189,7 +187,6 @@ void Game::Initialise()
 	m_pPickups = new vector <CPickup*>;
 	m_pBombs = new vector <CBomb*>;
 	m_pFBO = new CFrameBufferObject;
-	m_pShadow = new CFrameBufferObject;
 	m_pTV = new CPlane;
 	m_pIntro = new CPlane;
 	m_pDeath = new CPlane;
@@ -217,7 +214,8 @@ void Game::Initialise()
 	sShaderFileNames.push_back("sphereShaderEd.vert");  //modified version of Ed's toon shader
 	sShaderFileNames.push_back("sphereShaderEd.geom");
 	sShaderFileNames.push_back("sphereShaderEd.frag"); 
-	sShaderFileNames.push_back("treeShader.vert");		//treeShader
+	sShaderFileNames.push_back("treeShader.vert");		//treeShader for duplication
+	sShaderFileNames.push_back("treeShader.geom");
 	sShaderFileNames.push_back("treeShader.frag");
 	sShaderFileNames.push_back("explodeShader.vert");	//explosion shader for bombs
 	sShaderFileNames.push_back("explodeShader.geom");
@@ -266,21 +264,15 @@ void Game::Initialise()
 	pTreeShader->CreateProgram();
 	pTreeShader->AddShaderToProgram(&shShaders[7]);
 	pTreeShader->AddShaderToProgram(&shShaders[8]);
+	pTreeShader->AddShaderToProgram(&shShaders[9]);
 	pTreeShader->LinkProgram();
 	m_pShaderPrograms->push_back(pTreeShader);				//m_pShaderPrograms[3]
 
-	//pass1Index = glGetSubroutineIndex(pTreeShader->GetProgramID(), GL_FRAGMENT_SHADER, "recordDepth");
-	//pass2Index = glGetSubroutineIndex(pTreeShader->GetProgramID(), GL_FRAGMENT_SHADER, "shadeWithShadow");
-	shadowBias = glm::mat4(glm::vec4(0.5f, 0.0f, 0.0f, 0.0f),
-		glm::vec4(0.0f, 0.5f, 0.0f, 0.0f),
-		glm::vec4(0.0f, 0.0f, 0.5f, 0.0f),
-		glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
-
 	CShaderProgram* pExplodeShader = new CShaderProgram;
 	pExplodeShader->CreateProgram();
-	pExplodeShader->AddShaderToProgram(&shShaders[9]);
 	pExplodeShader->AddShaderToProgram(&shShaders[10]);
 	pExplodeShader->AddShaderToProgram(&shShaders[11]);
+	pExplodeShader->AddShaderToProgram(&shShaders[12]);
 	pExplodeShader->LinkProgram();
 	m_pShaderPrograms->push_back(pExplodeShader);			//m_pShaderPrograms[4]
 
@@ -389,7 +381,6 @@ void Game::Initialise()
 	m_pFilter->Create("resources\\textures\\", "death.png", width, height, 1.0f);	
 	m_pHeart->Create("resources\\textures\\", "heart.png", 25.f, 25.f, 1.f);		//created by Jihae Han
 	m_pFBO->Create(width, height);
-	//m_pShadow->Create(width, height);
 }
 
 // Render method runs repeatedly in a loop
@@ -435,7 +426,8 @@ void Game::RenderScene(int pass)
 
 	// Call LookAt to create the view matrix and put this on the modelViewMatrix stack. 
 	// Store the view matrix and the normal matrix associated with the view matrix for later (they're useful for lighting -- since lighting is done in eye coordinates)
-	if (pass == 0 && m_TVActive == true)
+	
+	if (pass == 0 && m_TVActive == true) //create top-down view that follows player for minimap.
 		modelViewMatrixStack.LookAt(m_pPlayer->GetPosition() + glm::vec3(0,1,0)*40.f,m_pPlayer->GetPosition(), m_pPlayer->GetView());
 	else
  		modelViewMatrixStack.LookAt(m_pCamera->GetPosition(), m_pCamera->GetView(), m_pCamera->GetUpVector());
@@ -523,21 +515,6 @@ void Game::RenderScene(int pass)
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
 	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 
-	/*
-	// Render the oak
-	glDisable(GL_CULL_FACE);
-	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f);
-	treePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition);
-	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(treePosition);
-	modelViewMatrixStack.Scale(6.f);
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pOakMesh->Render();
-	modelViewMatrixStack.Pop();
-	glEnable(GL_CULL_FACE);
-	*/
-
 	// Render the tetrahedron towers
 	for (int i = 0; i < 20; i++) {
 		modelViewMatrixStack.Push();
@@ -608,7 +585,7 @@ void Game::RenderScene(int pass)
 	
 	//============================ TREE SHADER ======================================//
 	// Switch to the tree program
-	/*
+	
 	CShaderProgram* pTreeProgram = (*m_pShaderPrograms)[3];
 	pTreeProgram->UseProgram();
 	pTreeProgram->SetUniform("sampler0", 0);
@@ -664,7 +641,6 @@ void Game::RenderScene(int pass)
 	m_pOakMesh->Render();
 	modelViewMatrixStack.Pop();
 	glEnable(GL_CULL_FACE);
-	*/
 	
 	//============================ EXPLODE SHADER ===================================//
 	// It makes bombs explode upon contact

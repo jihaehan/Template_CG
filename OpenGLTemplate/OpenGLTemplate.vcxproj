@@ -180,15 +180,11 @@
     <ClCompile Include="VertexBufferObjectIndexed.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="resources\shaders\disintegrateShader.frag" />
-    <None Include="resources\shaders\disintegrateShader.vert" />
     <None Include="resources\shaders\explodeShader.frag" />
     <None Include="resources\shaders\explodeShader.geom" />
     <None Include="resources\shaders\explodeShader.vert" />
     <None Include="resources\shaders\mainShader.frag" />
     <None Include="resources\shaders\mainShader.vert" />
-    <None Include="resources\shaders\simpleDepth.frag" />
-    <None Include="resources\shaders\simpleDepth.vert" />
     <None Include="resources\shaders\sphereShaderEd.frag" />
     <None Include="resources\shaders\sphereShaderEd.geom" />
     <None Include="resources\shaders\sphereShaderEd.vert" />
