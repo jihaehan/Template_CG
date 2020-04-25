@@ -638,7 +638,7 @@ void Game::RenderScene(int pass)
 	modelViewMatrixStack.Scale(6.f);
 	pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 	pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pOakMesh->Render();
+	m_pOakMesh->RenderInstances(32);
 	modelViewMatrixStack.Pop();
 	glEnable(GL_CULL_FACE);
 	

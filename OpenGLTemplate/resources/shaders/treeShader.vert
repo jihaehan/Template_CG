@@ -17,14 +17,23 @@ out vec3 eyeNormPass;
 
 void main()
 {	
+	// Instanced rendering
+	float x = gl_InstanceID % 32;
+	float z = gl_InstanceID / 32;
+	vec3 shift = 10 * vec3(x - 16.0f, 0.f, z - 16.0f);
+
 	// Transform the vertex spatial position using 
-	gl_Position = vec4(inPosition, 1.0f);
-	
+	gl_Position = vec4(inPosition + shift, 1.0f);
+	//gl_Position = vec4(inPosition, 1.0f);
+
 	// Get the vertex normal and vertex position in eye coordinates
 	eyeNormPass = normalize(matrices.normalMatrix * inNormal);
 	eyePositionPass = matrices.modelViewMatrix * vec4(inPosition, 1.0f);
 
 	// Pass through the texture coordinate
 	vTexCoordPass = inCoord;
+
+
+
 } 
 	

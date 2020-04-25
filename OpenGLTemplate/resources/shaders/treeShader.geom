@@ -20,6 +20,7 @@ layout(triangle_strip, max_vertices = 3) out;
 
 void main()
 {
+    // Pass to fragment shader
     for (int i = 0; i < 3; i++) 
     {
         gl_Position = matrices.projMatrix * matrices.modelViewMatrix * gl_in[i].gl_Position;

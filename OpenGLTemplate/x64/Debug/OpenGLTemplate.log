@@ -14,4 +14,16 @@ C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Ga
 C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(858,65): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(858,48): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Game.cpp(1154,21): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
+  OpenAssetImportMesh.cpp
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\OpenAssetImportMesh.cpp(44,32): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+  Player.cpp
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Player.cpp(50,26): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Player.cpp(54,26): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Player.cpp(59,25): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Player.cpp(61,38): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Player.cpp(65,25): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Player.cpp(67,38): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Player.cpp(73,25): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\OpenGLTemplate\Player.cpp(78,25): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+  Generating Code...
   OpenGLTemplate.vcxproj -> C:\Users\jihae\Desktop\MSc_Games\Computer_Graphics\Template_CG\x64\Debug\OpenGLTemplate.exe
