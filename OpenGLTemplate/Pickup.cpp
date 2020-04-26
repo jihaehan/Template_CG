@@ -35,6 +35,7 @@ void CPickup::Render(glutil::MatrixStack matrixStack, CShaderProgram* shaderProg
 		shaderProgram->SetUniform("matrices.normalMatrix", camera->ComputeNormalMatrix(matrixStack.Top()));
 		shaderProgram->SetUniform("bExplodeObject", m_is_triggered);
 		shaderProgram->SetUniform("explodeFactor", explodeFactor*explodeFactor);
+		shaderProgram->SetUniform("changeColour", m_colourChange);
 		m_pickup->Render();
 		matrixStack.Pop();
 	}
@@ -60,4 +61,7 @@ void CPickup::Update(float dt, const glm::vec3 &player_pos, int &score)
 			CPickup::~CPickup();
 		}
 	}
+
+	if (distance < 25.f)
+		m_colourChange = .5f - distance / 50.f;
 }

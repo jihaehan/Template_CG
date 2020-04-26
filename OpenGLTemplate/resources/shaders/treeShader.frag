@@ -28,6 +28,7 @@ struct MaterialInfo
 uniform LightInfo light1; 
 uniform LightInfo spotlight[4];
 uniform MaterialInfo material1; 
+uniform float t;
 
 vec3 PhongModel(vec4 eyePosition, vec3 eyeNorm)
 {
@@ -80,6 +81,6 @@ void main()
 
 	vec4 vTexColour = texture(sampler0, vTexCoord);	
 
-	vOutputColour = vTexColour*vec4(vColour, 1.0f);	
+	vOutputColour = vTexColour*vec4(vColour, 1.0f);
 	
 }

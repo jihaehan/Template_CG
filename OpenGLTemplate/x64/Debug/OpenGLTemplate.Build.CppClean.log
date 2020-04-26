@@ -1,8 +1,8 @@
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\vc142.pdb
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\vc142.idb
-c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\sphere.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\skybox.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\shaders.obj
+c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\quad.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\player.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\plane.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\pickup.obj
@@ -11,7 +11,6 @@ c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x6
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\highresolutiontimer.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\heightmapterrain.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\gamewindow.obj
-c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\game.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\freetypefont.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\framebufferobject.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\facevertexmesh.obj
@@ -25,7 +24,8 @@ c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x6
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\urchin.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\texture.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\tetrahedron.obj
-c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\quad.obj
+c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\sphere.obj
+c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\opengltemplate\x64\debug\game.obj
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\x64\debug\opengltemplate.exe
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\x64\debug\opengltemplate.ilk
 c:\users\jihae\desktop\msc_games\computer_graphics\template_cg\x64\debug\opengltemplate.pdb

@@ -23,6 +23,7 @@ private:
 	CSphere* m_pickup{};
 
 	bool m_is_active;	
+	float m_colourChange;
 	float m_timer;
 	float m_is_triggered;
 	float explodeFactor;

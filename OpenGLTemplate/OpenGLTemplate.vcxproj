@@ -191,6 +191,7 @@
     <None Include="resources\shaders\textShader.frag" />
     <None Include="resources\shaders\textShader.vert" />
     <None Include="resources\shaders\treeShader.frag" />
+    <None Include="resources\shaders\treeShader.geom" />
     <None Include="resources\shaders\treeShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

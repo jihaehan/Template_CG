@@ -8,10 +8,12 @@ CPlayer::~CPlayer()
 {
 }
 
+//Initialize some mesh as the player
 void CPlayer::Initialise(COpenAssetImportMesh* object) {
 	m_player = object; 
 }
 
+//Render Player
 void CPlayer::Render(glutil::MatrixStack playerStack, CShaderProgram* shaderProgram, CCamera* camera) 
 {
 	glm::quat RotationQuat = LookAt(m_view, m_upVector);
@@ -29,6 +31,7 @@ void CPlayer::Render(glutil::MatrixStack playerStack, CShaderProgram* shaderProg
 	
 }
 
+//Set position and direction of player
 void CPlayer::Set(glm::vec3& position,  glm::vec3& viewpoint, glm::vec3& upVector) {
 	
 	m_view = viewpoint;
@@ -36,6 +39,7 @@ void CPlayer::Set(glm::vec3& position,  glm::vec3& viewpoint, glm::vec3& upVecto
 	m_position = position + m_speed *glm::normalize(m_strafeVector) + m_fspeed * glm::normalize(viewpoint);
 }	
 
+// Update player movements
 void CPlayer::Update(double dt)
 {
 	TranslateByKeyboard(dt);
@@ -45,30 +49,33 @@ void CPlayer::Update(double dt)
 // Update the camera to respond to key presses for translation
 void CPlayer::TranslateByKeyboard(double dt)
 {
+	//Advance forward
 	if (GetKeyState(VK_UP) & 0x80 || GetKeyState('W') & 0x80) {		
 		if (m_fspeed < m_clamp)
 			m_fspeed += 0.01f * dt;
 	}
+	//Advance backward
 	else if (GetKeyState(VK_DOWN) & 0x80 || GetKeyState('S') & 0x80) {
 		if (m_fspeed > -m_clamp)
 			m_fspeed -= 0.01f * dt;
 	}
-
+	//Strafe left
 	if (GetKeyState(VK_LEFT) & 0x80 || GetKeyState('A') & 0x80) {
-		if (m_lean < m_clamp / 40.f)
-			m_lean += 0.001f * dt;
+		if (m_lean < m_clamp / 40.f)	//determines a lean factor depending on direction of travel
+			m_lean += 0.001f * dt;	
 		if (m_speed > -m_clamp) 
 			m_speed -= 0.01f * dt - m_lean/5.f;
 	}
+	//Strafe right
 	else if (GetKeyState(VK_RIGHT) & 0x80 || GetKeyState('D') & 0x80) {
-		if (m_lean > -m_clamp / 40.f)
+		if (m_lean > -m_clamp / 40.f)    //determines a lean factor depending on direction of travel
 			m_lean -= 0.001f * dt;
 		if (m_speed < m_clamp)
 			m_speed += 0.01f * dt + m_lean/5.f;
 	}
-	else
+	else 
 	{
-		if (m_lean > 0.05)
+		if (m_lean > 0.05)	//adjusts player lean so that moving left/right feels more natural
 		{
 			m_lean -= 0.001f * dt;
 			m_speed -= m_lean*m_lean;
@@ -84,6 +91,7 @@ void CPlayer::TranslateByKeyboard(double dt)
 }
 
 // Returns a quaternion such that q*start = dest
+// Equation adapted from : http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-17-quaternions/#how-do-i-create-a-quaternion-in-c-
 glm::quat CPlayer::RotationBetweenVectors(glm::vec3 start, glm::vec3 dest) {
 	start = normalize(start);
 	dest = normalize(dest);
@@ -108,6 +116,7 @@ glm::quat CPlayer::RotationBetweenVectors(glm::vec3 start, glm::vec3 dest) {
 // Returns a quaternion that will make your object looking towards 'direction'.
 // Similar to RotationBetweenVectors, but also controls the vertical orientation.
 // Beware, the first parameter is a direction, not the target point !
+// Modified equation from http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-17-quaternions/#how-do-i-create-a-quaternion-in-c-
 glm::quat CPlayer::LookAt(glm::vec3 direction, glm::vec3 desiredUp) {
 
 	if (length2(direction) < 0.0001f)
@@ -132,6 +141,7 @@ glm::quat CPlayer::LookAt(glm::vec3 direction, glm::vec3 desiredUp) {
 
 // Like SLERP, but forbids rotation greater than maxAngle (in radians)
 // In conjunction to LookAt, can make your characters 
+// Sourced from: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-17-quaternions/#how-do-i-create-a-quaternion-in-c-
 glm::quat CPlayer::RotateTowards(glm::quat q1, glm::quat q2, float maxAngle) {
 
 	if (maxAngle < 0.001f) {

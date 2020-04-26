@@ -17,6 +17,7 @@ public:
 private:
 	int m_width, m_height;
 	float* m_heightMap;
+	
 	CFaceVertexMesh m_mesh;
 	UINT m_hTexture;
 	float m_terrainSizeX, m_terrainSizeZ;

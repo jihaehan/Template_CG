@@ -47,8 +47,6 @@ void CBomb::Update(float dt, const glm::vec3& player_pos, int& health)
 	if ((m_is_active == true) && distance < 4.0f)
 	{
 		m_is_triggered = true;
-		//explodeFactor += dt * 0.02f;
-
 		health -= 10;
 	}
 	else if (m_is_triggered == true)

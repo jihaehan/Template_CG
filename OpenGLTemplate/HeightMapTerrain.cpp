@@ -160,7 +160,7 @@ bool CHeightMapTerrain::Create(const char* terrainFilename, const char* textureF
 	m_texture0.Load("resources\\textures\\vangogh_sower3.png", true);
 	m_texture1.Load("resources\\textures\\vangogh_sower5.png", true);
 	m_texture2.Load("resources\\textures\\vangogh_sower6.png", true);
-	m_texture3.Load("resources\\textures\\vangogh_sower6.png", true);
+	m_texture3.Load("resources\\textures\\vangogh_sower7.png", true);
 
 	return true;
 }

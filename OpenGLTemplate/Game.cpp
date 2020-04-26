@@ -75,6 +75,7 @@ Game::Game()
 	m_pFBO = NULL;
 	m_pTV = NULL;
 	m_pIntro = NULL;
+	m_pInstruct = NULL;
 	m_pDeath = NULL;
 	m_pHeart = NULL;
 	m_pFilter = NULL;
@@ -89,20 +90,19 @@ Game::Game()
 	m_currentDistance = 0.f;
 	m_cameraSpeed = 0.05f;
 	m_score = 0; 
-	m_health = 30;
+	m_health = 50;
 	m_lightswitch = true;
 	m_TVActive = false;
-	m_close = 0;
-	m_trap = 0;
-	m_lightup = 0;
 	m_pickup_num = 40;
 	m_bomb_num = 20;
 	m_lives = 3;
 	m_cameraControl = 1;
 	m_freeview = false; 
-	m_start = false;
+	m_start = -1;
 	m_timerStart = 4;
 	m_switchColour = 0;
+	m_treeDist = 0;
+	m_treeExplode = 0;
 
 }
 
@@ -131,6 +131,7 @@ Game::~Game()
 	delete m_pFBO;
 	delete m_pTV;
 	delete m_pIntro;
+	delete m_pInstruct;
 	delete m_pDeath;
 	delete m_pHeart;
 	delete m_pFilter;
@@ -189,6 +190,7 @@ void Game::Initialise()
 	m_pFBO = new CFrameBufferObject;
 	m_pTV = new CPlane;
 	m_pIntro = new CPlane;
+	m_pInstruct = new CPlane;
 	m_pDeath = new CPlane;
 	m_pHeart = new CPlane;
 	m_pFilter = new CPlane;
@@ -214,7 +216,7 @@ void Game::Initialise()
 	sShaderFileNames.push_back("sphereShaderEd.vert");  //modified version of Ed's toon shader
 	sShaderFileNames.push_back("sphereShaderEd.geom");
 	sShaderFileNames.push_back("sphereShaderEd.frag"); 
-	sShaderFileNames.push_back("treeShader.vert");		//treeShader for duplication
+	sShaderFileNames.push_back("treeShader.vert");		//treeShader for instanced rendering
 	sShaderFileNames.push_back("treeShader.geom");
 	sShaderFileNames.push_back("treeShader.frag");
 	sShaderFileNames.push_back("explodeShader.vert");	//explosion shader for bombs
@@ -294,7 +296,7 @@ void Game::Initialise()
 	m_pBirdMesh->Load("resources\\models\\Bird\\CARDNL_F.3ds"); //https://www.turbosquid.com/FullPreview/Index.cfm/ID/1100939 downloaded on April 3
 
 	// Create a sphere
-	m_pSphere->Create("resources\\textures\\", "dirtpile01.jpg", 25, 25);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	m_pSphere->Create("resources\\textures\\", "intro.png", 25, 25);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
 
 	// Create a tetrahedron
@@ -321,7 +323,7 @@ void Game::Initialise()
 	m_pCatmullRom->CreateTrack("resources\\textures\\", "dirtpile01.jpg");
 	m_pCatmullRom->ComputeTrackPoints();
 
-	//initialize offset track birds
+	//initialize offset track demarcators
 	for (int i = 0; i < 100; i++) {
 		int j = i * 4;
 		wall_lefttrack.push_back(m_pCatmullRom->GetLeftOffsetPoints()[j]); 
@@ -377,6 +379,7 @@ void Game::Initialise()
 
 	m_pTV->Create("resources\\textures\\", "grassfloor01.jpg", width/3, height/3, 1.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	m_pIntro->Create("resources\\textures\\", "intro.png", width, height, 1.0f);	//texture made by Jihae Han, with modified assets from http://www.freepik.com on April 2 2020
+	m_pInstruct->Create("resources\\textures\\", "instructions.png", width, height, 1.0f);	//texture made by Jihae Han, with modified assets from http://www.freepik.com on April 25 2020
 	m_pDeath->Create("resources\\textures\\", "death.png", width, height, 1.0f);	//created by Jihae Han
 	m_pFilter->Create("resources\\textures\\", "death.png", width, height, 1.0f);	
 	m_pHeart->Create("resources\\textures\\", "heart.png", 25.f, 25.f, 1.f);		//created by Jihae Han
@@ -386,8 +389,7 @@ void Game::Initialise()
 // Render method runs repeatedly in a loop
 void Game::Render() 
 {
-	
-	m_pFBO->Bind();
+	m_pFBO->Bind(); 
 	RenderScene(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	RenderScene(1);
@@ -428,7 +430,7 @@ void Game::RenderScene(int pass)
 	// Store the view matrix and the normal matrix associated with the view matrix for later (they're useful for lighting -- since lighting is done in eye coordinates)
 	
 	if (pass == 0 && m_TVActive == true) //create top-down view that follows player for minimap.
-		modelViewMatrixStack.LookAt(m_pPlayer->GetPosition() + glm::vec3(0,1,0)*40.f,m_pPlayer->GetPosition(), m_pPlayer->GetView());
+		modelViewMatrixStack.LookAt(m_pPlayer->GetPosition() + glm::vec3(0,1,0)*100.f,m_pPlayer->GetPosition(), m_pPlayer->GetView());
 	else
  		modelViewMatrixStack.LookAt(m_pCamera->GetPosition(), m_pCamera->GetView(), m_pCamera->GetUpVector());
 
@@ -585,12 +587,14 @@ void Game::RenderScene(int pass)
 	
 	//============================ TREE SHADER ======================================//
 	// Switch to the tree program
+	// tree program has instanced rendering, so the 5 trees rendered below appear as a forest of trees
 	
 	CShaderProgram* pTreeProgram = (*m_pShaderPrograms)[3];
 	pTreeProgram->UseProgram();
 	pTreeProgram->SetUniform("sampler0", 0);
 	pTreeProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
 
+	//Setup lighting
 	pTreeProgram->SetUniform("light1.position", viewMatrix * lightPosition1);	
 	pTreeProgram->SetUniform("light1.La", glm::vec3(1.0f * m_lightswitch));		
 	pTreeProgram->SetUniform("light1.Ld", glm::vec3(1.0f * m_lightswitch));		
@@ -623,13 +627,13 @@ void Game::RenderScene(int pass)
 	pTreeProgram->SetUniform("spotlight[3].Ls", glm::vec3(0.f, 0.f, 1.0f - 1.0f * m_lightswitch));
 	pTreeProgram->SetUniform("spotlight[3].exponent", 20.0f);
 	pTreeProgram->SetUniform("spotlight[3].cutoff", 100.f);
-
 	pTreeProgram->SetUniform("material1.Ma", glm::vec3(0.5f * m_lightswitch));	
 	pTreeProgram->SetUniform("material1.Md", glm::vec3(0.5f));	
 	pTreeProgram->SetUniform("material1.Ms", glm::vec3(1.0f));		
 	pTreeProgram->SetUniform("material1.shininess", 15.0f);		
+	pTreeProgram->SetUniform("t", m_t);		
 
-	// Render the oak
+	// Render the oak trees
 	glDisable(GL_CULL_FACE);
 	glm::vec3 treePosition = glm::vec3(50.0f, 0.0f, 0.0f);
 	treePosition.y = m_pHeightmapTerrain->ReturnGroundHeight(treePosition);
@@ -638,10 +642,53 @@ void Game::RenderScene(int pass)
 	modelViewMatrixStack.Scale(6.f);
 	pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 	pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pOakMesh->RenderInstances(32);
+	m_pOakMesh->RenderInstances(30);
 	modelViewMatrixStack.Pop();
-	glEnable(GL_CULL_FACE);
+
+	//this particular set of trees is set to explode upon proximity
+	treePosition = glm::vec3(-300.0f, -25, -40);
+	modelViewMatrixStack.Push();
+	modelViewMatrixStack.Rotate(glm::vec3(0, 1, 0), M_PI / 24.f);
+	modelViewMatrixStack.Translate(treePosition);
+	modelViewMatrixStack.Scale(7.f);
+	pTreeProgram->SetUniform("explodeFactor", pow(m_treeExplode, 4)); //feed information for explosion size to shader
+	pTreeProgram->SetUniform("dist", m_treeDist);	//feed proximity information to shader
+	pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	m_pOakMesh->RenderInstances(30);
+	modelViewMatrixStack.Pop();
 	
+	modelViewMatrixStack.Push();
+	modelViewMatrixStack.Rotate(glm::vec3(0, 1, 0), M_PI / 24.f);
+	modelViewMatrixStack.Translate(treePosition);
+	modelViewMatrixStack.Scale(7.f);
+	pTreeProgram->SetUniform("dist", 100.f);
+	pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	m_pOakMesh->RenderInstances(30);
+	modelViewMatrixStack.Pop();
+
+	treePosition = glm::vec3(-200.0f, -50, -350);
+	modelViewMatrixStack.Push();
+	modelViewMatrixStack.Translate(treePosition);
+	modelViewMatrixStack.Scale(6.f);
+	pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	m_pOakMesh->RenderInstances(30);
+	modelViewMatrixStack.Pop();
+
+	treePosition = glm::vec3(-600, -50, -400);
+	modelViewMatrixStack.Push();
+	modelViewMatrixStack.Rotate(glm::vec3(0, 1, 0), 0.78f);
+	modelViewMatrixStack.Translate(treePosition);
+	modelViewMatrixStack.Scale(5.f);
+	pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	m_pOakMesh->RenderInstances(30);
+	modelViewMatrixStack.Pop();
+
+	glEnable(GL_CULL_FACE);
+
 	//============================ EXPLODE SHADER ===================================//
 	// It makes bombs explode upon contact
 	CShaderProgram* pExplodeProgram = (*m_pShaderPrograms)[4];
@@ -669,9 +716,9 @@ void Game::RenderScene(int pass)
 	CShaderProgram* pToonProgram = (*m_pShaderPrograms)[2];
 	pToonProgram->UseProgram();
 	// Set light and materials in sphere programme
-	pToonProgram->SetUniform("material1.Ma", glm::vec3(m_lightup, 1.0f - m_lightup, m_lightup));
-	pToonProgram->SetUniform("material1.Md", glm::vec3(m_lightup, 1.0f - m_lightup, m_lightup));
-	pToonProgram->SetUniform("material1.Ms", glm::vec3(m_lightup, 1.0f - m_lightup, m_lightup));
+	pToonProgram->SetUniform("material1.Ma", glm::vec3(0.f, 1.0f , 1.f));
+	pToonProgram->SetUniform("material1.Md", glm::vec3(0.f, 1.0f, 1.f));
+	pToonProgram->SetUniform("material1.Ms", glm::vec3(0.f, 1.0f, 1.f));
 	pToonProgram->SetUniform("material1.shininess", 50.0f);
 	pToonProgram->SetUniform("light1.La", glm::vec3(0.15f, 0.15f, 0.15f));
 	pToonProgram->SetUniform("light1.Ld", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -687,7 +734,7 @@ void Game::RenderScene(int pass)
 		(*m_pPickups)[i]->Render(modelViewMatrixStack, pToonProgram, m_pCamera);
 	}
 
-	// Render track outlines
+	// Render track outlines (and back to main program)
 	pMainProgram->UseProgram();
 	pMainProgram->SetUniform("bUseTransparency", true);
 	pMainProgram->SetUniform("vTransparency", .3f - m_lightswitch * 0.3f);
@@ -724,10 +771,9 @@ void Game::Update()
 	m_pAudio->Update();	//update audio
 	m_t += (float)(0.01f * m_dt); //update continuously increasing timer value
 
-	if (m_start == true) GameStart(); //allows the gameplay state to begin 
+	if (m_start >= 1) GameStart(); //allows the gameplay state to begin 
 
 }
-
 
 // Update method for gameplay state after passing intro screen
 void Game::GameStart()
@@ -747,7 +793,7 @@ void Game::GameStart()
 	//Set Player
 	glm::vec3 PlayerT = glm::normalize(playerP - pNext);
 	glm::vec3 PlayerN = glm::normalize(cross(PlayerT, playerUp));
-	if (m_start == true) m_pPlayer->Set(pNext, PlayerT, upNext);
+	if (m_start >= 1) m_pPlayer->Set(pNext, PlayerT, upNext);
 
 	//Set Camera Options
 	if (m_freeview == false) CameraControl(P, playerP, viewpt, PlayerN, playerUp, upNextNext);
@@ -757,13 +803,10 @@ void Game::GameStart()
 
 	//Update pickups
 	for (int i = 0; i < m_pickup_num; i++) {
-		m_close = distance(m_pPlayer->GetPosition(), (*m_pPickups)[i]->GetPosition());
 		(*m_pPickups)[i]->Update(m_dt, m_pPlayer->GetPosition(), m_score);
-		if (m_close <= 70.0f) m_lightup = 1. - m_close / 70.f;
 	}
 	//Update bombs
 	for (int i = 0; i < m_bomb_num; i++) {
-		m_trap = distance(m_pPlayer->GetPosition(), (*m_pBombs)[i]->GetPosition());
 		(*m_pBombs)[i]->Update(m_dt, m_pPlayer->GetPosition(), m_health);
 	}
 	//Update lives
@@ -771,6 +814,9 @@ void Game::GameStart()
 		m_lives -= 1;
 		m_health = 30;
 	}
+	//Update tree explosion distance
+	m_treeDist = glm::distance(m_pPlayer->GetPosition(), glm::vec3(-179.f, 32.f, -7.f));
+	if (m_treeDist < 70.f) m_treeExplode += m_dt * 0.001f; else m_treeExplode = 0;
 
 	//Number of Laps
 	//m_pCatmullRom->CurrentLap(m_currentDistance); 
@@ -800,27 +846,7 @@ void Game::CameraControl(glm::vec3& pos, glm::vec3& player, glm::vec3& viewpt, g
 
 void Game::ColourControl(CShaderProgram* fontProgram)
 {
-	switch (m_switchColour)
-	{
-	case 0: //normal colour
-		fontProgram->SetUniform("switchColour", 0);
-		break;
-	case 1: //black and white
-		fontProgram->SetUniform("switchColour", 1);
-		break;
-	case 2: //difference
-		fontProgram->SetUniform("switchColour", 2);
-		break;
-	case 3: //vibrant
-		fontProgram->SetUniform("switchColour", 3);
-		break;
-	case 4: //rgb
-		fontProgram->SetUniform("switchColour", 4);
-		break;
-	case 5: //transparencyoverlays
-		fontProgram->SetUniform("switchColour", 5);
-		break;
-	}
+	fontProgram->SetUniform("switchColour", m_switchColour);
 }
 
 void Game::DisplayHUD(int pass)
@@ -840,7 +866,7 @@ void Game::DisplayHUD(int pass)
 
 
 	//render in-game hud
-	if (m_start == true) { 
+	if (m_start >= 1) { 
 
 		// render countdown before start
 		if (m_elapsedTime == 0)  m_timerStart -= 1;
@@ -862,9 +888,10 @@ void Game::DisplayHUD(int pass)
 				m_pHeart->Render();
 			} screenViewMatrixStack.Pop();
 		}
+				
 	}
 	//render intro screen
-	else  
+	else if (m_start < 0)
 	{
 		//render intro screen background
 		glDisable(GL_CULL_FACE);
@@ -883,11 +910,35 @@ void Game::DisplayHUD(int pass)
 		fontProgram->SetUniform("bText", true);
 		m_pFtFont->Render(width * 5 / 8, height / 2 - 30, 32, "Road Runner");
 		m_pFtFont->Render(width * 2/3 + 18, height/2 - 70, 14, "SPACE TO PLAY");
+
 	}
-	//render death screen
-	if (m_lives == 0)
+	//render instructions scene
+	else 
 	{
-		if (m_freeview == true) m_lives = -1;
+		glDisable(GL_CULL_FACE);
+		screenViewMatrixStack.Push();
+		screenViewMatrixStack.Translate(0.f, 0.f, 0.0f);
+		screenViewMatrixStack.RotateRadians(glm::vec3(0.0f, 0.0f, 1.0f), (float)M_PI);
+		screenViewMatrixStack.Scale(-1.0);
+		fontProgram->SetUniform("bText", false);
+		fontProgram->SetUniform("matrices.modelViewMatrix", screenViewMatrixStack.Top());
+		fontProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(screenViewMatrixStack.Top()));
+		m_pInstruct->Render();
+		screenViewMatrixStack.Pop();
+		glEnable(GL_CULL_FACE);
+
+		fontProgram->SetUniform("bText", true);
+		m_pFtFont->Render(width * 2 / 3 - 10, height / 2 - 35, 15, "SPACE TO PLAY");
+		m_pFtFont->Render(width * 6 / 10 - 6, height / 2 + 40, 15, " WASD move . M minimap .");
+		m_pFtFont->Render(width * 6 / 10 - 18, height / 2 + 20, 15, " F1-3 viewpt . 0-5 colours .");
+		m_pFtFont->Render(width * 6 / 10 - 10, height / 2, 15, "TAB day/night . F freeview");
+		m_pFtFont->Render(width * 6 / 10 - 10, height / 2 - 75 , 15, "lives      points       bombs");
+	}
+
+	//render death screen
+	if (m_lives <= 0)
+	{
+		if (m_freeview == true) m_lives = 3;
 		glDisable(GL_CULL_FACE);
 		screenViewMatrixStack.Push();
 		screenViewMatrixStack.Translate(0.f, 0.f, 0.0f);
@@ -898,6 +949,10 @@ void Game::DisplayHUD(int pass)
 		m_pDeath->Render();
 		screenViewMatrixStack.Pop();
 		glEnable(GL_CULL_FACE);
+
+		//Displays score
+		fontProgram->SetUniform("bText", true);
+		m_pFtFont->Render(width/2 - 40.f, height * 1/5, 22, "Score: %d", m_score);
 	}
 
 	// Increase the elapsed time and frame counter
@@ -906,7 +961,7 @@ void Game::DisplayHUD(int pass)
 
 	// Now we want to subtract the current time by the last time that was stored
 	// to see if the time elapsed has been over a second, which means we found our FPS.
-	if (m_elapsedTime > 2000 && m_start == true)
+	if (m_elapsedTime > 2000 && m_start >= 1)
     {
 		m_elapsedTime = 0;
 		m_framesPerSecond = m_frameCount;
@@ -1060,7 +1115,7 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 			PostQuitMessage(0);
 			break;
 		case VK_SPACE: //starts gameplay state
-			m_start = true;
+			m_start += 1;
 			break;
 		case 'P': //plays event sound
 			m_pAudio->PlayEventSound();
@@ -1090,7 +1145,7 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 		case VK_F3: //switches to top-down view camera
 			m_cameraControl = 3;
 			break;
-		case '0':
+		case '0':	//See 'Camera Control' function for more information on keys 0-5
 			m_switchColour = 0;
 			break;
 		case '1':
@@ -1108,7 +1163,7 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 		case '5':
 			m_switchColour = 5;
 			break;
-		case 189: //cases for tooh shader
+		case 189: //cases for toon shader
 			if (m_levels > 1) m_levels = m_levels - 1;
 			break;
 		case 187:
@@ -1156,6 +1211,7 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE, PSTR, int)
 
 // Implementation from Stan Melax's Game Programming Gems 1 article
 // Helper function for quaternion rotations along the 3D spline (track)
+// Adapted from: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-17-quaternions/#how-do-i-create-a-quaternion-in-c-
 glm::quat Game::RotationBetweenVectors(glm::vec3 start, glm::vec3 dest) {
 	start = normalize(start);
 	dest = normalize(dest);

@@ -32,7 +32,6 @@ private:
 	void Initialise();
 	void Update();
 	void Render();
-	void RenderShadow();
 	void RenderScene(int pass);
 
 	// Pointers to game objects.  They will get allocated in Game::Initialise()
@@ -63,6 +62,7 @@ private:
 	CPlane* m_pTV;
 	CPlane* m_pHeart;
 	CPlane* m_pIntro;
+	CPlane* m_pInstruct;
 	CPlane* m_pDeath;
 	CPlane* m_pFilter;
 
@@ -78,17 +78,16 @@ private:
 	int m_health;
 	bool m_lightswitch;
 	bool m_TVActive;
-	float m_close;
-	float m_trap;
-	float m_lightup;
 	int m_pickup_num;
 	int m_bomb_num;
 	int m_lives;
 	int m_cameraControl;
 	bool m_freeview;
-	bool m_start;
+	int m_start;
 	int m_timerStart;
 	int m_switchColour;
+	float m_treeDist;
+	float m_treeExplode;
 	int width;  //screen width
 	int height; //screen height
 
@@ -102,10 +101,6 @@ private:
 	vector<glm::mat4> pavilion_trackrot;
 	vector<glm::vec3> ring_track;
 	vector<glm::mat4> ring_trackrot;
-
-	//gl shader subroutines and matrices
-	GLuint pass1Index, pass2Index;
-	glm::mat4 shadowBias, lightPV;
 
 public:
 	Game();
